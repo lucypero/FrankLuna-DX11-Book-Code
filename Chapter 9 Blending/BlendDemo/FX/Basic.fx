@@ -30,7 +30,7 @@ Texture2D gDiffuseMap;
 
 SamplerState samAnisotropic
 {
-	Filter = ANISOTROPIC;
+	Filter = MIN_MAG_MIP_POINT;
 	MaxAnisotropy = 4;
 
 	AddressU = WRAP;

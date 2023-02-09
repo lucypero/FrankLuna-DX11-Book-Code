@@ -1,0 +1,10 @@
+- Exercises for Chapter 8: Textures.
+
+
+todo: exercises:
+
+(mayb break down each individual exercise into a whole branch)
+
+3
+4
+5
