@@ -67,6 +67,7 @@ private:
 	ID3D11ShaderResourceView* mGrassMapSRV;
 	ID3D11ShaderResourceView* mWavesMapSRV;
 	ID3D11ShaderResourceView* mBoxMapSRV;
+	ID3D11ShaderResourceView* mBoxMapSRV2;
 
 	Waves mWaves;
 
@@ -116,7 +117,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 }
 
 BlendApp::BlendApp(HINSTANCE hInstance)
-: D3DApp(hInstance), mLandVB(0), mLandIB(0), mWavesVB(0), mWavesIB(0), mBoxVB(0), mBoxIB(0), mGrassMapSRV(0), mWavesMapSRV(0), mBoxMapSRV(0),
+: D3DApp(hInstance), mLandVB(0), mLandIB(0), mWavesVB(0), mWavesIB(0), mBoxVB(0), mBoxIB(0), mGrassMapSRV(0), mWavesMapSRV(0), mBoxMapSRV2(0), mBoxMapSRV(0),
   mWaterTexOffset(0.0f, 0.0f), mEyePosW(0.0f, 0.0f, 0.0f), mLandIndexCount(0), mRenderOptions(RenderOptions::TexturesAndFog),
   mTheta(1.3f*MathHelper::Pi), mPhi(0.4f*MathHelper::Pi), mRadius(80.0f)
 {
@@ -179,6 +180,7 @@ BlendApp::~BlendApp()
 	ReleaseCOM(mGrassMapSRV);
 	ReleaseCOM(mWavesMapSRV);
 	ReleaseCOM(mBoxMapSRV);
+	ReleaseCOM(mBoxMapSRV2);
 
 	Effects::DestroyAll();
 	InputLayouts::DestroyAll();
@@ -204,7 +206,10 @@ bool BlendApp::Init()
 	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, L"Textures/water2.dds", &texResource, &mWavesMapSRV));
 	ReleaseCOM(texResource); // view saves reference
 
-	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, L"Textures/WireFence.dds", &texResource, &mBoxMapSRV));
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, L"Textures/flare.dds", &texResource, &mBoxMapSRV));
+	ReleaseCOM(texResource); // view saves reference
+
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, L"Textures/flarealpha.dds", &texResource, &mBoxMapSRV2));
 	ReleaseCOM(texResource); // view saves reference
 	
 	BuildLandGeometryBuffers();
@@ -371,6 +376,7 @@ void BlendApp::DrawScene()
 		Effects::BasicFX->SetTexTransform(XMMatrixIdentity());
 		Effects::BasicFX->SetMaterial(mBoxMat);
 		Effects::BasicFX->SetDiffuseMap(mBoxMapSRV);
+		Effects::BasicFX->SetDiffuseMap2(mBoxMapSRV2);
 
 		md3dImmediateContext->RSSetState(RenderStates::NoCullRS);
 		boxTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);

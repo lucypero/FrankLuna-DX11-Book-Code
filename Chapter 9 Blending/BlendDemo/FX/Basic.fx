@@ -27,6 +27,7 @@ cbuffer cbPerObject
 
 // Nonnumeric values cannot be added to a cbuffer.
 Texture2D gDiffuseMap;
+Texture2D gDiffuseMap2;
 
 SamplerState samAnisotropic
 {
@@ -85,25 +86,22 @@ float4 PS(VertexOut pin, uniform int gLightCount, uniform bool gUseTexure, unifo
 	
     // Default to multiplicative identity.
     float4 texColor = float4(1, 1, 1, 1);
+    float4 texColor2 = float4(1, 1, 1, 1);
     if(gUseTexure)
 	{
 		// Sample texture.
 		texColor = gDiffuseMap.Sample( samAnisotropic, pin.Tex );
-
-		if(gAlphaClip)
-		{
-			// Discard pixel if texture alpha < 0.1.  Note that we do this
-			// test as soon as possible so that we can potentially exit the shader 
-			// early, thereby skipping the rest of the shader code.
-			clip(texColor.a - 0.1f);
-		}
+		texColor2 = gDiffuseMap2.Sample( samAnisotropic, pin.Tex );
 	}
 	 
 	//
 	// Lighting.
 	//
 
-	float4 litColor = texColor;
+    float4 final_tex_color = texColor * texColor2;
+    // float4 final_tex_color = texColor ;
+
+	float4 litColor = final_tex_color;
 	if( gLightCount > 0  )
 	{  
 		// Start with a sum of zero. 
@@ -125,7 +123,7 @@ float4 PS(VertexOut pin, uniform int gLightCount, uniform bool gUseTexure, unifo
 		}
 
 		// Modulate with late add.
-		litColor = texColor*(ambient + diffuse) + spec;
+		litColor = final_tex_color*(ambient + diffuse) + spec;
 	}
 
 	//
