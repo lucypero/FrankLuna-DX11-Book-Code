@@ -82,6 +82,10 @@ private:
 	XMFLOAT4X4 mWavesWorld;
 	XMFLOAT4X4 mBoxWorld;
 
+
+	XMFLOAT4X4 mTexTransform;
+	XMFLOAT4X4 mTexTransform2;
+
 	XMFLOAT4X4 mView;
 	XMFLOAT4X4 mProj;
 
@@ -140,6 +144,9 @@ BlendApp::BlendApp(HINSTANCE hInstance)
 	XMMATRIX grassTexScale = XMMatrixScaling(5.0f, 5.0f, 0.0f);
 	XMStoreFloat4x4(&mGrassTexTransform, grassTexScale);
 
+	XMStoreFloat4x4(&mTexTransform, I);
+	XMStoreFloat4x4(&mTexTransform2, I);
+
 	mDirLights[0].Ambient  = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
 	mDirLights[0].Diffuse  = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
 	mDirLights[0].Specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
@@ -166,6 +173,7 @@ BlendApp::BlendApp(HINSTANCE hInstance)
 	mBoxMat.Ambient  = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
 	mBoxMat.Diffuse  = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	mBoxMat.Specular = XMFLOAT4(0.4f, 0.4f, 0.4f, 16.0f);
+
 }
 
 BlendApp::~BlendApp()
@@ -261,6 +269,16 @@ void BlendApp::UpdateScene(float dt)
 	}
 
 	mWaves.Update(dt);
+
+
+
+	// update tex transform
+	XMMATRIX rot1 = XMMatrixRotationZ(mTimer.TotalTime() * 5.0f);
+	XMMATRIX rot2 = XMMatrixRotationZ(mTimer.TotalTime() * -1.0f + 20.0f);
+	XMMATRIX trans_2 = XMMatrixTranslation(0.5f, 0.5f, 0.0f);
+	XMMATRIX trans_2_i = XMMatrixTranslation(-0.5f, -0.5f, 0.0f);
+	XMStoreFloat4x4(&mTexTransform, trans_2_i * rot1 * trans_2);
+	XMStoreFloat4x4(&mTexTransform2, trans_2_i * rot2 * trans_2);
 
 	//
 	// Update the wave vertex buffer with the new solution.
@@ -373,7 +391,12 @@ void BlendApp::DrawScene()
 		Effects::BasicFX->SetWorld(world);
 		Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
 		Effects::BasicFX->SetWorldViewProj(worldViewProj);
-		Effects::BasicFX->SetTexTransform(XMMatrixIdentity());
+
+
+		XMMATRIX tex_trans = XMLoadFloat4x4(&mTexTransform);
+		Effects::BasicFX->SetTexTransform(tex_trans);
+		XMMATRIX tex_trans_2 = XMLoadFloat4x4(&mTexTransform2);
+		Effects::BasicFX->SetTexTransform2(tex_trans_2);
 		Effects::BasicFX->SetMaterial(mBoxMat);
 		Effects::BasicFX->SetDiffuseMap(mBoxMapSRV);
 		Effects::BasicFX->SetDiffuseMap2(mBoxMapSRV2);

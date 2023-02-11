@@ -22,6 +22,7 @@ cbuffer cbPerObject
 	float4x4 gWorldInvTranspose;
 	float4x4 gWorldViewProj;
 	float4x4 gTexTransform;
+	float4x4 gTexTransform2;
 	Material gMaterial;
 }; 
 
@@ -51,6 +52,7 @@ struct VertexOut
     float3 PosW    : POSITION;
     float3 NormalW : NORMAL;
 	float2 Tex     : TEXCOORD;
+	float2 Tex2     : TEXCOORD1;
 };
 
 VertexOut VS(VertexIn vin)
@@ -66,6 +68,7 @@ VertexOut VS(VertexIn vin)
 	
 	// Output vertex attributes for interpolation across triangle.
 	vout.Tex = mul(float4(vin.Tex, 0.0f, 1.0f), gTexTransform).xy;
+	vout.Tex2 = mul(float4(vin.Tex, 0.0f, 1.0f), gTexTransform2).xy;
 
 	return vout;
 }
@@ -91,7 +94,9 @@ float4 PS(VertexOut pin, uniform int gLightCount, uniform bool gUseTexure, unifo
 	{
 		// Sample texture.
 		texColor = gDiffuseMap.Sample( samAnisotropic, pin.Tex );
-		texColor2 = gDiffuseMap2.Sample( samAnisotropic, pin.Tex );
+		texColor2 = gDiffuseMap2.Sample( samAnisotropic, pin.Tex2 );
+
+        clip(texColor2.r - 0.2f);
 	}
 	 
 	//
