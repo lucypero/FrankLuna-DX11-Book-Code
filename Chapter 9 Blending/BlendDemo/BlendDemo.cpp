@@ -225,7 +225,7 @@ bool BlendApp::Init()
 		tex_name += std::to_wstring(i+1);
 		tex_name += L".bmp";
 
-		HR(DirectX::CreateDDSTextureFromFile(md3dDevice, tex_name.c_str(), &texResource, &mFireSRV[i]));
+		HR(DirectX::CreateWICTextureFromFile(md3dDevice, tex_name.c_str(), &texResource, &mFireSRV[i]));
 		ReleaseCOM(texResource); // view saves reference
 	}
 	
