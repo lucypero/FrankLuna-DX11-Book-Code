@@ -23,6 +23,8 @@
 #include "RenderStates.h"
 #include "Waves.h"
 
+#include <string>
+
 using namespace DirectX;
 
 enum RenderOptions
@@ -67,6 +69,8 @@ private:
 	ID3D11ShaderResourceView* mGrassMapSRV;
 	ID3D11ShaderResourceView* mWavesMapSRV;
 	ID3D11ShaderResourceView* mBoxMapSRV;
+
+	ID3D11ShaderResourceView* mFireSRV[120];
 
 	Waves mWaves;
 
@@ -206,6 +210,24 @@ bool BlendApp::Init()
 
 	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, L"Textures/WireFence.dds", &texResource, &mBoxMapSRV));
 	ReleaseCOM(texResource); // view saves reference
+
+	for(uint32_t i = 0; i < 120; ++i) {
+
+		std::wstring tex_name = L"Textures/FireAnim/Fire";
+
+
+		if(i + 1 <= 9) {
+			tex_name += L"00";
+		} else if (i + 1 <= 99) {
+			tex_name += L"0";
+		}
+
+		tex_name += std::to_wstring(i+1);
+		tex_name += L".bmp";
+
+		HR(DirectX::CreateDDSTextureFromFile(md3dDevice, tex_name.c_str(), &texResource, &mFireSRV[i]));
+		ReleaseCOM(texResource); // view saves reference
+	}
 	
 	BuildLandGeometryBuffers();
 	BuildWaveGeometryBuffers();
