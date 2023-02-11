@@ -392,7 +392,9 @@ void BlendApp::DrawScene()
 		Effects::BasicFX->SetWorldViewProj(worldViewProj);
 		Effects::BasicFX->SetTexTransform(XMMatrixIdentity());
 		Effects::BasicFX->SetMaterial(mBoxMat);
-		Effects::BasicFX->SetDiffuseMap(mBoxMapSRV);
+
+		int index = (int)(mTimer.TotalTime() * 30.0f) % 120;
+		Effects::BasicFX->SetDiffuseMap(mFireSRV[index]);
 
 		md3dImmediateContext->RSSetState(RenderStates::NoCullRS);
 		boxTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
