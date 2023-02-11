@@ -204,7 +204,7 @@ bool BlendApp::Init()
 	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, L"Textures/water2.dds", &texResource, &mWavesMapSRV));
 	ReleaseCOM(texResource); // view saves reference
 
-	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, L"Textures/WireFence.dds", &texResource, &mBoxMapSRV));
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, L"Textures/mipmaps.dds", &texResource, &mBoxMapSRV));
 	ReleaseCOM(texResource); // view saves reference
 	
 	BuildLandGeometryBuffers();
