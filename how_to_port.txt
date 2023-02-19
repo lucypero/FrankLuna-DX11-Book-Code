@@ -9,8 +9,12 @@ using namespace DirectX;
 
 - DDS loading functions. just look at how the new ones are. they are a bit different.
 
+D3DX11CreateShaderResourceViewFromFile -> DirectX::CreateDDSTextureFromFile
+
 - Add the missing cpp files in the Common folder to the solution. (dxerr.cpp, DDSTextureLoader.cpp)
 
 - in VS, add ..\..\Common as include folder and library folder.
 
 - in VS, change the library names in the linker input tab as they are on the already ported chapters.
+
+- you might have to add code/files to Common if the chapter added more stuff to it.
