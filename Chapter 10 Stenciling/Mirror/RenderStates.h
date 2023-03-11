@@ -29,6 +29,11 @@ public:
 	static ID3D11DepthStencilState* MarkMirrorDSS;
 	static ID3D11DepthStencilState* DrawReflectionDSS;
 	static ID3D11DepthStencilState* NoDoubleBlendDSS;
+
+	// exercise stencil states
+	static ID3D11DepthStencilState* Exercise1DSS;
+	static ID3D11DepthStencilState* Exercise2DSS;
+	static ID3D11DepthStencilState* Exercise3DSS;
 };
 
 #endif // RENDERSTATES_H

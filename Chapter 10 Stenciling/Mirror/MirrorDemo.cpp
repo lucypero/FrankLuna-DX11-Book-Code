@@ -310,6 +310,8 @@ void MirrorApp::DrawScene()
 	//
 	// Draw the floor and walls to the back buffer as normal.
 	//
+
+	md3dImmediateContext->OMSetDepthStencilState(RenderStates::Exercise1DSS, 1);
 	
 	activeTech->GetDesc( &techDesc );
 	for(UINT p = 0; p < techDesc.Passes; ++p)
@@ -329,6 +331,9 @@ void MirrorApp::DrawScene()
 		Effects::BasicFX->SetTexTransform(XMMatrixIdentity());
 		Effects::BasicFX->SetMaterial(mRoomMat);
 
+		// no culling for walls so it can occlude the skull
+		md3dImmediateContext->RSSetState(RenderStates::NoCullRS);
+
 		// Floor
 		Effects::BasicFX->SetDiffuseMap(mFloorDiffuseMapSRV);
 		pass->Apply(0, md3dImmediateContext);
@@ -340,9 +345,15 @@ void MirrorApp::DrawScene()
 		md3dImmediateContext->Draw(18, 6);
 	}
 
+	md3dImmediateContext->RSSetState(0);
+	md3dImmediateContext->OMSetDepthStencilState(0, 0);
+
 	//
 	// Draw the skull to the back buffer as normal.
 	//
+
+
+	md3dImmediateContext->OMSetDepthStencilState(RenderStates::Exercise2DSS, 1);
 
 	activeSkullTech->GetDesc( &techDesc );
 	for(UINT p = 0; p < techDesc.Passes; ++p)
@@ -364,6 +375,8 @@ void MirrorApp::DrawScene()
 		pass->Apply(0, md3dImmediateContext);
 		md3dImmediateContext->DrawIndexed(mSkullIndexCount, 0, 0);
 	}
+
+	md3dImmediateContext->OMSetDepthStencilState(0, 0);
 
 	//
 	// Draw the mirror to stencil buffer only.

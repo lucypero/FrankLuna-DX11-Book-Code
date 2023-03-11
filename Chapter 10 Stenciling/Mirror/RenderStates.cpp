@@ -16,6 +16,10 @@ ID3D11DepthStencilState* RenderStates::MarkMirrorDSS     = 0;
 ID3D11DepthStencilState* RenderStates::DrawReflectionDSS = 0;
 ID3D11DepthStencilState* RenderStates::NoDoubleBlendDSS  = 0;
 
+ID3D11DepthStencilState* RenderStates::Exercise1DSS = 0;
+ID3D11DepthStencilState* RenderStates::Exercise2DSS = 0;
+ID3D11DepthStencilState* RenderStates::Exercise3DSS = 0;
+
 void RenderStates::InitAll(ID3D11Device* device)
 {
 	//
@@ -182,6 +186,89 @@ void RenderStates::InitAll(ID3D11Device* device)
 	noDoubleBlendDesc.BackFace.StencilFunc   = D3D11_COMPARISON_EQUAL;
 
 	HR(device->CreateDepthStencilState(&noDoubleBlendDesc, &NoDoubleBlendDSS));
+
+	//
+	// exercise 1 DSS
+	//
+
+	{
+		D3D11_DEPTH_STENCIL_DESC blend_desc;
+		blend_desc.DepthEnable      = false;
+		blend_desc.DepthWriteMask   = D3D11_DEPTH_WRITE_MASK_ALL;
+		blend_desc.DepthFunc        = D3D11_COMPARISON_LESS; 
+		blend_desc.StencilEnable    = false;
+		blend_desc.StencilReadMask  = 0x00;
+		blend_desc.StencilWriteMask = 0x00;
+
+		blend_desc.FrontFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
+		blend_desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		blend_desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
+		blend_desc.FrontFace.StencilFunc   = D3D11_COMPARISON_EQUAL;
+
+		// We are not rendering backfacing polygons, so these settings do not matter.
+		blend_desc.BackFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
+		blend_desc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		blend_desc.BackFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
+		blend_desc.BackFace.StencilFunc   = D3D11_COMPARISON_EQUAL;
+
+		HR(device->CreateDepthStencilState(&blend_desc, &Exercise1DSS));
+	}
+
+
+	//
+	// exercise 2 DSS
+	//
+
+	{
+		D3D11_DEPTH_STENCIL_DESC blend_desc;
+		blend_desc.DepthEnable      = true;
+		blend_desc.DepthWriteMask   = D3D11_DEPTH_WRITE_MASK_ALL;
+		blend_desc.DepthFunc        = D3D11_COMPARISON_LESS; 
+		blend_desc.StencilEnable    = false;
+		blend_desc.StencilReadMask  = 0x00;
+		blend_desc.StencilWriteMask = 0x00;
+
+		blend_desc.FrontFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
+		blend_desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		blend_desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
+		blend_desc.FrontFace.StencilFunc   = D3D11_COMPARISON_EQUAL;
+
+		// We are not rendering backfacing polygons, so these settings do not matter.
+		blend_desc.BackFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
+		blend_desc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		blend_desc.BackFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
+		blend_desc.BackFace.StencilFunc   = D3D11_COMPARISON_EQUAL;
+
+		HR(device->CreateDepthStencilState(&blend_desc, &Exercise2DSS));
+	}
+
+	//
+	// exercise 3 DSS
+	//
+
+	{
+		D3D11_DEPTH_STENCIL_DESC blend_desc;
+		blend_desc.DepthEnable      = false;
+		blend_desc.DepthWriteMask   = D3D11_DEPTH_WRITE_MASK_ZERO;
+		blend_desc.DepthFunc        = D3D11_COMPARISON_LESS; 
+		blend_desc.StencilEnable    = false;
+		blend_desc.StencilReadMask  = 0x00;
+		blend_desc.StencilWriteMask = 0x00;
+
+		blend_desc.FrontFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
+		blend_desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		blend_desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
+		blend_desc.FrontFace.StencilFunc   = D3D11_COMPARISON_EQUAL;
+
+		// We are not rendering backfacing polygons, so these settings do not matter.
+		blend_desc.BackFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
+		blend_desc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		blend_desc.BackFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
+		blend_desc.BackFace.StencilFunc   = D3D11_COMPARISON_EQUAL;
+
+		HR(device->CreateDepthStencilState(&blend_desc, &Exercise3DSS));
+	}
+
 }
 
 void RenderStates::DestroyAll()
