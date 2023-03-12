@@ -90,6 +90,24 @@ public:
 };
 #pragma endregion
 
+class AdditiveEffect : public Effect
+{
+public:
+	AdditiveEffect(ID3D11Device* device, const std::wstring& filename);
+	~AdditiveEffect();
+
+	void SetWorldViewProj(CXMMATRIX M)                  { WorldViewProj->SetMatrix(reinterpret_cast<const float*>(&M)); }
+	void SetTexTransform(CXMMATRIX M)                   { TexTransform->SetMatrix(reinterpret_cast<const float*>(&M)); }
+	void SetDiffuseMap(ID3D11ShaderResourceView* tex)   { DiffuseMap->SetResource(tex); }
+
+	ID3DX11EffectTechnique* AdditiveTech;
+
+	ID3DX11EffectMatrixVariable* WorldViewProj;
+	ID3DX11EffectMatrixVariable* TexTransform;
+
+	ID3DX11EffectShaderResourceVariable* DiffuseMap;
+};
+
 #pragma region Effects
 class Effects
 {
@@ -98,6 +116,7 @@ public:
 	static void DestroyAll();
 
 	static BasicEffect* BasicFX;
+	static AdditiveEffect* AdditiveFX;
 };
 #pragma endregion
 

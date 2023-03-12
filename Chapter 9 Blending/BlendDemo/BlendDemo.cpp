@@ -23,6 +23,8 @@
 #include "RenderStates.h"
 #include "Waves.h"
 
+#include <string>
+
 using namespace DirectX;
 
 enum RenderOptions
@@ -63,10 +65,12 @@ private:
 
 	ID3D11Buffer* mBoxVB;
 	ID3D11Buffer* mBoxIB;
+	int box_indices_count;
 
 	ID3D11ShaderResourceView* mGrassMapSRV;
 	ID3D11ShaderResourceView* mWavesMapSRV;
 	ID3D11ShaderResourceView* mBoxMapSRV;
+	ID3D11ShaderResourceView* mBoltSRV[60];
 
 	Waves mWaves;
 
@@ -206,6 +210,23 @@ bool BlendApp::Init()
 
 	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, L"Textures/WireFence.dds", &texResource, &mBoxMapSRV));
 	ReleaseCOM(texResource); // view saves reference
+
+	for(uint32_t i = 0; i < 60; ++i) {
+
+		std::wstring tex_name = L"Textures/BoltAnim/Bolt";
+
+		if(i + 1 <= 9) {
+			tex_name += L"00";
+		} else if (i + 1 <= 99) {
+			tex_name += L"0";
+		}
+
+		tex_name += std::to_wstring(i+1);
+		tex_name += L".bmp";
+
+		HR(DirectX::CreateWICTextureFromFile(md3dDevice, tex_name.c_str(), &texResource, &mBoltSRV[i]));
+		ReleaseCOM(texResource); // view saves reference
+	}
 	
 	BuildLandGeometryBuffers();
 	BuildWaveGeometryBuffers();
@@ -351,36 +372,6 @@ void BlendApp::DrawScene()
 	D3DX11_TECHNIQUE_DESC techDesc;
 
 	//
-	// Draw the box with alpha clipping.
-	// 
-
-	boxTech->GetDesc( &techDesc );
-	for(UINT p = 0; p < techDesc.Passes; ++p)
-    {
-		md3dImmediateContext->IASetVertexBuffers(0, 1, &mBoxVB, &stride, &offset);
-		md3dImmediateContext->IASetIndexBuffer(mBoxIB, DXGI_FORMAT_R32_UINT, 0);
-
-		// Set per object constants.
-		XMMATRIX world = XMLoadFloat4x4(&mBoxWorld);
-		XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
-		XMMATRIX worldViewProj = world*view*proj;
-		
-		Effects::BasicFX->SetWorld(world);
-		Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
-		Effects::BasicFX->SetWorldViewProj(worldViewProj);
-		Effects::BasicFX->SetTexTransform(XMMatrixIdentity());
-		Effects::BasicFX->SetMaterial(mBoxMat);
-		Effects::BasicFX->SetDiffuseMap(mBoxMapSRV);
-
-		md3dImmediateContext->RSSetState(RenderStates::NoCullRS);
-		boxTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-		md3dImmediateContext->DrawIndexed(36, 0, 0);
-
-		// Restore default render state.
-		md3dImmediateContext->RSSetState(0);
-	}
-
-	//
 	// Draw the hills and water with texture and fog (no alpha clipping needed).
 	//
 
@@ -433,6 +424,40 @@ void BlendApp::DrawScene()
 		// Restore default blend state
 		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
     }
+
+	// drawing bolt
+
+	ID3DX11EffectTechnique* additiveTech = Effects::AdditiveFX->AdditiveTech;
+	additiveTech->GetDesc( &techDesc );
+	for(UINT p = 0; p < techDesc.Passes; ++p)
+    {
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mBoxVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mBoxIB, DXGI_FORMAT_R32_UINT, 0);
+
+		// Set per object constants.
+		XMMATRIX world = XMLoadFloat4x4(&mBoxWorld);
+		XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
+		XMMATRIX worldViewProj = world*view*proj;
+		
+		Effects::AdditiveFX->SetWorldViewProj(worldViewProj);
+		Effects::AdditiveFX->SetTexTransform(XMMatrixIdentity());
+
+		int index = (int)(mTimer.TotalTime() * 30.0f) % 60;
+		Effects::AdditiveFX->SetDiffuseMap(mBoltSRV[index]);
+
+		md3dImmediateContext->RSSetState(RenderStates::NoCullRS);
+		md3dImmediateContext->OMSetDepthStencilState(RenderStates::NoDepthWritesDSS, 0);
+
+		md3dImmediateContext->OMSetBlendState(RenderStates::AdditiveBS, blendFactor, 0xffffffff);
+		additiveTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
+		md3dImmediateContext->DrawIndexed(box_indices_count, 0, 0);
+
+		// Restore default render state.
+		md3dImmediateContext->RSSetState(0);
+		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
+		md3dImmediateContext->OMSetDepthStencilState(0, 0);
+	}
+
 
 	HR(mSwapChain->Present(1, 0));
 }
@@ -608,7 +633,12 @@ void BlendApp::BuildCrateGeometryBuffers()
 	GeometryGenerator::MeshData box;
 
 	GeometryGenerator geoGen;
-	geoGen.CreateBox(1.0f, 1.0f, 1.0f, box);
+
+	float radius = 0.8f;
+
+	geoGen.CreateCylinder(radius, radius, 2.0f, 20, 5, box, false);
+
+	// geoGen.CreateBox(1.0f, 1.0f, 1.0f, box);
 
 	//
 	// Extract the vertex elements we are interested in and pack the
@@ -647,4 +677,6 @@ void BlendApp::BuildCrateGeometryBuffers()
     D3D11_SUBRESOURCE_DATA iinitData;
     iinitData.pSysMem = &box.Indices[0];
     HR(md3dDevice->CreateBuffer(&ibd, &iinitData, &mBoxIB));
+
+	box_indices_count = box.Indices.size();
 }

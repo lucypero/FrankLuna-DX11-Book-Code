@@ -78,17 +78,33 @@ BasicEffect::~BasicEffect()
 }
 #pragma endregion
 
+AdditiveEffect::AdditiveEffect(ID3D11Device* device, const std::wstring& filename)
+	: Effect(device, filename)
+{
+	AdditiveTech    = mFX->GetTechniqueByName("AdditiveTech");
+	WorldViewProj     = mFX->GetVariableByName("gWorldViewProj")->AsMatrix();
+	TexTransform      = mFX->GetVariableByName("gTexTransform")->AsMatrix();
+	DiffuseMap        = mFX->GetVariableByName("gDiffuseMap")->AsShaderResource();
+}
+
+AdditiveEffect::~AdditiveEffect()
+{
+}
+
 #pragma region Effects
 
 BasicEffect* Effects::BasicFX = 0;
+AdditiveEffect* Effects::AdditiveFX = 0;
 
 void Effects::InitAll(ID3D11Device* device)
 {
 	BasicFX = new BasicEffect(device, L"FX/Basic.fxo");
+	AdditiveFX = new AdditiveEffect(device, L"FX/Additive.fxo");
 }
 
 void Effects::DestroyAll()
 {
 	SafeDelete(BasicFX);
+	SafeDelete(AdditiveFX);
 }
 #pragma endregion

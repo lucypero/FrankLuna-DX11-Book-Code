@@ -351,7 +351,7 @@ void GeometryGenerator::CreateGeosphere(float radius, UINT numSubdivisions, Mesh
 	}
 }
 
-void GeometryGenerator::CreateCylinder(float bottomRadius, float topRadius, float height, UINT sliceCount, UINT stackCount, MeshData& meshData)
+void GeometryGenerator::CreateCylinder(float bottomRadius, float topRadius, float height, UINT sliceCount, UINT stackCount, MeshData& meshData, bool with_caps)
 {
 	meshData.Vertices.clear();
 	meshData.Indices.clear();
@@ -440,8 +440,10 @@ void GeometryGenerator::CreateCylinder(float bottomRadius, float topRadius, floa
 		}
 	}
 
-	BuildCylinderTopCap(bottomRadius, topRadius, height, sliceCount, stackCount, meshData);
-	BuildCylinderBottomCap(bottomRadius, topRadius, height, sliceCount, stackCount, meshData);
+	if(with_caps) {
+		BuildCylinderTopCap(bottomRadius, topRadius, height, sliceCount, stackCount, meshData);
+		BuildCylinderBottomCap(bottomRadius, topRadius, height, sliceCount, stackCount, meshData);
+	}
 }
 
 void GeometryGenerator::BuildCylinderTopCap(float bottomRadius, float topRadius, float height, 
