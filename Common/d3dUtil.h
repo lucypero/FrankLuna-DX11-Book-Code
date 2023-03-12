@@ -12,6 +12,7 @@
  
 #include "d3dx11Effect.h"
 #include "DDSTextureLoader.h"
+#include "WICTextureLoader.h"
 #include <DirectXMath.h>
 #include <DirectXPackedVector.h>
 #include "dxerr.h"
