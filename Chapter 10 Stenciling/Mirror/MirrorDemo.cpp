@@ -58,6 +58,8 @@ private:
 	ID3D11Buffer* mSkullVB;
 	ID3D11Buffer* mSkullIB;
 
+	ID3D11Buffer* mQuadVB;
+
 	ID3D11ShaderResourceView* mFloorDiffuseMapSRV;
 	ID3D11ShaderResourceView* mWallDiffuseMapSRV;
 	ID3D11ShaderResourceView* mMirrorDiffuseMapSRV;
@@ -195,6 +197,34 @@ bool MirrorApp::Init()
 	BuildRoomGeometryBuffers();
 	BuildSkullGeometryBuffers();
 
+
+	// make quad vb
+
+	{
+		// 0    1
+		// 2    3
+
+		Vertex::Basic32 vertices[6] = {
+			Vertex::Basic32(-1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f), // 0
+			Vertex::Basic32(1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f), // 1
+			Vertex::Basic32(-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f), // 2
+
+			Vertex::Basic32(1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f), // 1
+			Vertex::Basic32(1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f), // 3
+			Vertex::Basic32(-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f), // 2
+		};
+
+		D3D11_BUFFER_DESC vbd;
+		vbd.Usage = D3D11_USAGE_IMMUTABLE;
+		vbd.ByteWidth = sizeof(Vertex::Basic32) * 6;
+		vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		vbd.CPUAccessFlags = 0;
+		vbd.MiscFlags = 0;
+		D3D11_SUBRESOURCE_DATA vinitData;
+		vinitData.pSysMem = vertices;
+		HR(md3dDevice->CreateBuffer(&vbd, &vinitData, &mQuadVB));
+	}
+
 	return true;
 }
 
@@ -307,6 +337,9 @@ void MirrorApp::DrawScene()
 
 	D3DX11_TECHNIQUE_DESC techDesc;
 
+
+	md3dImmediateContext->OMSetDepthStencilState(RenderStates::DepthCompexityVisualizerDSS, 1);
+
 	//
 	// Draw the floor and walls to the back buffer as normal.
 	//
@@ -391,13 +424,11 @@ void MirrorApp::DrawScene()
 
 		// Render visible mirror pixels to stencil buffer.
 		// Do not write mirror depth to depth buffer at this point, otherwise it will occlude the reflection.
-		md3dImmediateContext->OMSetDepthStencilState(RenderStates::MarkMirrorDSS, 1);
 		
 		pass->Apply(0, md3dImmediateContext);
 		md3dImmediateContext->Draw(6, 24);
 
 		// Restore states.
-		md3dImmediateContext->OMSetDepthStencilState(0, 0);
 		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
 	}
 
@@ -441,13 +472,11 @@ void MirrorApp::DrawScene()
 		md3dImmediateContext->RSSetState(RenderStates::CullClockwiseRS);
 
 		// Only draw reflection into visible mirror pixels as marked by the stencil buffer. 
-		md3dImmediateContext->OMSetDepthStencilState(RenderStates::DrawReflectionDSS, 1);
 		pass->Apply(0, md3dImmediateContext);
 		md3dImmediateContext->DrawIndexed(mSkullIndexCount, 0, 0);
 
 		// Restore default states.
 		md3dImmediateContext->RSSetState(0);	
-		md3dImmediateContext->OMSetDepthStencilState(0, 0);	
 
 		// Restore light directions.
 		for(int i = 0; i < 3; ++i)
@@ -514,13 +543,64 @@ void MirrorApp::DrawScene()
 		Effects::BasicFX->SetWorldViewProj(worldViewProj);
 		Effects::BasicFX->SetMaterial(mShadowMat);
 
-		md3dImmediateContext->OMSetDepthStencilState(RenderStates::NoDoubleBlendDSS, 0);
 		pass->Apply(0, md3dImmediateContext);
 		md3dImmediateContext->DrawIndexed(mSkullIndexCount, 0, 0);
 
 		// Restore default states.
 		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
-		md3dImmediateContext->OMSetDepthStencilState(0, 0);
+	}
+
+
+	// draw window-wide quad
+	ID3DX11EffectTechnique* quadTech = Effects::QuadFX->QuadEffectTech;
+	quadTech->GetDesc( &techDesc );
+	for(UINT p = 0; p < techDesc.Passes; ++p)
+    {
+		ID3DX11EffectPass* pass = quadTech->GetPassByIndex( p );
+
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mQuadVB, &stride, &offset);
+		Effects::QuadFX->SetTexTransform(XMMatrixIdentity());
+
+		// above 5
+		// Effects::QuadFX->SetColor(Colors::Silver);
+		// md3dImmediateContext->OMSetDepthStencilState(0, 0);
+		// pass->Apply(0, md3dImmediateContext);
+		// md3dImmediateContext->Draw(6, 0);
+
+		md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Colors::Silver));
+
+		Effects::QuadFX->SetColor(Colors::Green);
+		md3dImmediateContext->OMSetDepthStencilState(RenderStates::DepthCompexityVisualizer2DSS, 0);
+		pass->Apply(0, md3dImmediateContext);
+		md3dImmediateContext->Draw(6, 0);
+
+		Effects::QuadFX->SetColor(Colors::Red);
+		md3dImmediateContext->OMSetDepthStencilState(RenderStates::DepthCompexityVisualizer2DSS, 1);
+		pass->Apply(0, md3dImmediateContext);
+		md3dImmediateContext->Draw(6, 0);
+
+
+		Effects::QuadFX->SetColor(Colors::Blue);
+		md3dImmediateContext->OMSetDepthStencilState(RenderStates::DepthCompexityVisualizer2DSS, 2);
+		pass->Apply(0, md3dImmediateContext);
+		md3dImmediateContext->Draw(6, 0);
+
+		Effects::QuadFX->SetColor(Colors::White);
+		md3dImmediateContext->OMSetDepthStencilState(RenderStates::DepthCompexityVisualizer2DSS, 3);
+		pass->Apply(0, md3dImmediateContext);
+		md3dImmediateContext->Draw(6, 0);
+
+
+		Effects::QuadFX->SetColor(Colors::Yellow);
+		md3dImmediateContext->OMSetDepthStencilState(RenderStates::DepthCompexityVisualizer2DSS, 4);
+		pass->Apply(0, md3dImmediateContext);
+		md3dImmediateContext->Draw(6, 0);
+
+
+		Effects::QuadFX->SetColor(Colors::LightSteelBlue);
+		md3dImmediateContext->OMSetDepthStencilState(RenderStates::DepthCompexityVisualizer2DSS, 5);
+		pass->Apply(0, md3dImmediateContext);
+		md3dImmediateContext->Draw(6, 0);
 	}
 
 	HR(mSwapChain->Present(0, 0));

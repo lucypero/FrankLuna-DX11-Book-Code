@@ -90,6 +90,20 @@ public:
 };
 #pragma endregion
 
+class QuadEffect : public Effect
+{
+public:
+	QuadEffect(ID3D11Device* device, const std::wstring& filename);
+	~QuadEffect();
+
+	void SetColor(const FXMVECTOR v)                 { Color->SetFloatVector(reinterpret_cast<const float*>(&v)); }
+	void SetTexTransform(CXMMATRIX M)                   { TexTransform->SetMatrix(reinterpret_cast<const float*>(&M)); }
+
+	ID3DX11EffectTechnique* QuadEffectTech;
+	ID3DX11EffectVectorVariable* Color;
+	ID3DX11EffectMatrixVariable* TexTransform;
+};
+
 #pragma region Effects
 class Effects
 {
@@ -98,6 +112,7 @@ public:
 	static void DestroyAll();
 
 	static BasicEffect* BasicFX;
+	static QuadEffect* QuadFX;
 };
 #pragma endregion
 

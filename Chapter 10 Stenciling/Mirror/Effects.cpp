@@ -80,15 +80,30 @@ BasicEffect::~BasicEffect()
 
 #pragma region Effects
 
+QuadEffect::QuadEffect(ID3D11Device* device, const std::wstring& filename)
+	: Effect(device, filename)
+{
+	QuadEffectTech    = mFX->GetTechniqueByName("QuadTech");
+	TexTransform      = mFX->GetVariableByName("gTexTransform")->AsMatrix();
+	Color             = mFX->GetVariableByName("gColor")->AsVector();
+}
+
+QuadEffect::~QuadEffect()
+{
+}
+
 BasicEffect* Effects::BasicFX = 0;
+QuadEffect* Effects::QuadFX = 0;
 
 void Effects::InitAll(ID3D11Device* device)
 {
 	BasicFX = new BasicEffect(device, L"FX/Basic.fxo");
+	QuadFX = new QuadEffect(device, L"FX/Quad.fxo");
 }
 
 void Effects::DestroyAll()
 {
 	SafeDelete(BasicFX);
+	SafeDelete(QuadFX);
 }
 #pragma endregion

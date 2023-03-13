@@ -29,6 +29,9 @@ public:
 	static ID3D11DepthStencilState* MarkMirrorDSS;
 	static ID3D11DepthStencilState* DrawReflectionDSS;
 	static ID3D11DepthStencilState* NoDoubleBlendDSS;
+
+	static ID3D11DepthStencilState* DepthCompexityVisualizerDSS;
+	static ID3D11DepthStencilState* DepthCompexityVisualizer2DSS;
 };
 
 #endif // RENDERSTATES_H
