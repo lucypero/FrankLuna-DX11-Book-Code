@@ -307,6 +307,10 @@ void MirrorApp::DrawScene()
 
 	D3DX11_TECHNIQUE_DESC techDesc;
 
+
+	md3dImmediateContext->OMSetBlendState(RenderStates::AdditiveBS, blendFactor, 0xffffffff);
+	md3dImmediateContext->OMSetDepthStencilState(RenderStates::AlwaysPassDSS, 1);
+
 	//
 	// Draw the floor and walls to the back buffer as normal.
 	//
@@ -387,18 +391,14 @@ void MirrorApp::DrawScene()
 		Effects::BasicFX->SetTexTransform(XMMatrixIdentity());
 
 		// Do not write to render target.
-		md3dImmediateContext->OMSetBlendState(RenderStates::NoRenderTargetWritesBS, blendFactor, 0xffffffff);
 
 		// Render visible mirror pixels to stencil buffer.
 		// Do not write mirror depth to depth buffer at this point, otherwise it will occlude the reflection.
-		md3dImmediateContext->OMSetDepthStencilState(RenderStates::MarkMirrorDSS, 1);
 		
 		pass->Apply(0, md3dImmediateContext);
 		md3dImmediateContext->Draw(6, 24);
 
 		// Restore states.
-		md3dImmediateContext->OMSetDepthStencilState(0, 0);
-		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
 	}
 
 
@@ -441,13 +441,11 @@ void MirrorApp::DrawScene()
 		md3dImmediateContext->RSSetState(RenderStates::CullClockwiseRS);
 
 		// Only draw reflection into visible mirror pixels as marked by the stencil buffer. 
-		md3dImmediateContext->OMSetDepthStencilState(RenderStates::DrawReflectionDSS, 1);
 		pass->Apply(0, md3dImmediateContext);
 		md3dImmediateContext->DrawIndexed(mSkullIndexCount, 0, 0);
 
 		// Restore default states.
 		md3dImmediateContext->RSSetState(0);	
-		md3dImmediateContext->OMSetDepthStencilState(0, 0);	
 
 		// Restore light directions.
 		for(int i = 0; i < 3; ++i)
@@ -483,7 +481,6 @@ void MirrorApp::DrawScene()
 		Effects::BasicFX->SetDiffuseMap(mMirrorDiffuseMapSRV);
 
 		// Mirror
-		md3dImmediateContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
 		pass->Apply(0, md3dImmediateContext);
 		md3dImmediateContext->Draw(6, 24);
 	}
@@ -514,13 +511,10 @@ void MirrorApp::DrawScene()
 		Effects::BasicFX->SetWorldViewProj(worldViewProj);
 		Effects::BasicFX->SetMaterial(mShadowMat);
 
-		md3dImmediateContext->OMSetDepthStencilState(RenderStates::NoDoubleBlendDSS, 0);
 		pass->Apply(0, md3dImmediateContext);
 		md3dImmediateContext->DrawIndexed(mSkullIndexCount, 0, 0);
 
 		// Restore default states.
-		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
-		md3dImmediateContext->OMSetDepthStencilState(0, 0);
 	}
 
 	HR(mSwapChain->Present(0, 0));
