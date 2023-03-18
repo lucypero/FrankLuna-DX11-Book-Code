@@ -406,57 +406,88 @@ void MirrorApp::DrawScene()
 	// Draw the skull reflection.
 	//
 	activeSkullTech->GetDesc( &techDesc );
-	for(UINT p = 0; p < techDesc.Passes; ++p)
-    {
-		ID3DX11EffectPass* pass = activeSkullTech->GetPassByIndex( p );
+	ID3DX11EffectPass* pass = activeSkullTech->GetPassByIndex( 0 );
 
-		md3dImmediateContext->IASetVertexBuffers(0, 1, &mSkullVB, &stride, &offset);
-		md3dImmediateContext->IASetIndexBuffer(mSkullIB, DXGI_FORMAT_R32_UINT, 0);
+	md3dImmediateContext->IASetVertexBuffers(0, 1, &mSkullVB, &stride, &offset);
+	md3dImmediateContext->IASetIndexBuffer(mSkullIB, DXGI_FORMAT_R32_UINT, 0);
 
-		XMVECTOR mirrorPlane = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f); // xy plane
-		XMMATRIX R = XMMatrixReflect(mirrorPlane);
-		XMMATRIX world = XMLoadFloat4x4(&mSkullWorld) * R;
-		XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
-		XMMATRIX worldViewProj = world*view*proj;
+	XMVECTOR mirrorPlane = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f); // xy plane
+	XMMATRIX R = XMMatrixReflect(mirrorPlane);
+	XMMATRIX world = XMLoadFloat4x4(&mSkullWorld) * R;
+	XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
+	XMMATRIX worldViewProj = world*view*proj;
 
-		Effects::BasicFX->SetWorld(world);
-		Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
-		Effects::BasicFX->SetWorldViewProj(worldViewProj);
-		Effects::BasicFX->SetMaterial(mSkullMat);
+	Effects::BasicFX->SetWorld(world);
+	Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
+	Effects::BasicFX->SetWorldViewProj(worldViewProj);
+	Effects::BasicFX->SetMaterial(mSkullMat);
 
-		// Cache the old light directions, and reflect the light directions.
-		XMFLOAT3 oldLightDirections[3];
-		for(int i = 0; i < 3; ++i)
-		{
-			oldLightDirections[i] = mDirLights[i].Direction;
+	// Cache the old light directions, and reflect the light directions.
+	XMFLOAT3 oldLightDirections[3];
+	for(int i = 0; i < 3; ++i)
+	{
+		oldLightDirections[i] = mDirLights[i].Direction;
 
-			XMVECTOR lightDir = XMLoadFloat3(&mDirLights[i].Direction);
-			XMVECTOR reflectedLightDir = XMVector3TransformNormal(lightDir, R);
-			XMStoreFloat3(&mDirLights[i].Direction, reflectedLightDir);
-		}
-
-		Effects::BasicFX->SetDirLights(mDirLights);
-
-		// Cull clockwise triangles for reflection.
-		md3dImmediateContext->RSSetState(RenderStates::CullClockwiseRS);
-
-		// Only draw reflection into visible mirror pixels as marked by the stencil buffer. 
-		md3dImmediateContext->OMSetDepthStencilState(RenderStates::DrawReflectionDSS, 1);
-		pass->Apply(0, md3dImmediateContext);
-		md3dImmediateContext->DrawIndexed(mSkullIndexCount, 0, 0);
-
-		// Restore default states.
-		md3dImmediateContext->RSSetState(0);	
-		md3dImmediateContext->OMSetDepthStencilState(0, 0);	
-
-		// Restore light directions.
-		for(int i = 0; i < 3; ++i)
-		{
-			mDirLights[i].Direction = oldLightDirections[i];
-		}
-
-		Effects::BasicFX->SetDirLights(mDirLights);
+		XMVECTOR lightDir = XMLoadFloat3(&mDirLights[i].Direction);
+		XMVECTOR reflectedLightDir = XMVector3TransformNormal(lightDir, R);
+		XMStoreFloat3(&mDirLights[i].Direction, reflectedLightDir);
 	}
+
+	Effects::BasicFX->SetDirLights(mDirLights);
+
+	// Cull clockwise triangles for reflection.
+	md3dImmediateContext->RSSetState(RenderStates::CullClockwiseRS);
+
+	// Only draw reflection into visible mirror pixels as marked by the stencil buffer. 
+	md3dImmediateContext->OMSetDepthStencilState(RenderStates::DrawReflectionDSS, 1);
+	pass->Apply(0, md3dImmediateContext);
+	md3dImmediateContext->DrawIndexed(mSkullIndexCount, 0, 0);
+
+
+	// drawing reflected floor
+
+	md3dImmediateContext->IASetVertexBuffers(0, 1, &mRoomVB, &stride, &offset);
+
+	// Set per object constants.
+	world = XMLoadFloat4x4(&mRoomWorld) * R;
+	worldInvTranspose = MathHelper::InverseTranspose(world);
+	worldViewProj = world*view*proj;
+
+	Effects::BasicFX->SetWorld(world);
+	Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
+	Effects::BasicFX->SetWorldViewProj(worldViewProj);
+	Effects::BasicFX->SetTexTransform(XMMatrixIdentity());
+	Effects::BasicFX->SetMaterial(mRoomMat);
+
+	// Floor
+	Effects::BasicFX->SetDiffuseMap(mFloorDiffuseMapSRV);
+	pass = activeTech->GetPassByIndex( 0 );
+	pass->Apply(0, md3dImmediateContext);
+	md3dImmediateContext->Draw(6, 0);
+
+	// Restore default states.
+	md3dImmediateContext->RSSetState(0);	
+	md3dImmediateContext->OMSetDepthStencilState(0, 0);	
+
+	// Restore light directions.
+	for(int i = 0; i < 3; ++i)
+	{
+		mDirLights[i].Direction = oldLightDirections[i];
+	}
+
+	Effects::BasicFX->SetDirLights(mDirLights);
+
+	// Restore default states.
+	md3dImmediateContext->RSSetState(0);
+	md3dImmediateContext->OMSetDepthStencilState(0, 0);
+
+	// Restore light directions.
+	for (int i = 0; i < 3; ++i)
+	{
+		mDirLights[i].Direction = oldLightDirections[i];
+	}
+
+	Effects::BasicFX->SetDirLights(mDirLights);
 
 	//
 	// Draw the mirror to the back buffer as usual but with transparency
