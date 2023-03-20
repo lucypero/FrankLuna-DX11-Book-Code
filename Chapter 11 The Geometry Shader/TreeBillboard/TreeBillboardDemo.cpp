@@ -93,6 +93,7 @@ private:
 	UINT mLandIndexCount;
 
 	static const UINT TreeCount = 16;
+	static const int vertices_per_circle = 20;
 
 	bool mAlphaToCoverageOn;
 
@@ -703,7 +704,12 @@ void TreeBillboardApp::BuildCrateGeometryBuffers()
 
 void TreeBillboardApp::BuildTreeSpritesBuffer()
 {
-	Vertex::TreePointSprite v[TreeCount];
+	Vertex::TreePointSprite v[TreeCount * (vertices_per_circle + 1)];
+
+	UINT stride = vertices_per_circle + 1;
+
+	float dTheta = 2.0f*XM_PI/vertices_per_circle;
+	float r = 5.0f;
 
 	for(UINT i = 0; i < TreeCount; ++i)
 	{
@@ -714,13 +720,26 @@ void TreeBillboardApp::BuildTreeSpritesBuffer()
 		// Move tree slightly above land height.
 		y += 10.0f;
 
-		v[i].Pos  = XMFLOAT3(x,y,z);
-		v[i].Size = XMFLOAT2(24.0f, 24.0f);
+		UINT j = 0;
+
+		for(; j < vertices_per_circle; ++j) {
+
+			UINT v_i = stride * i + j;
+
+			float c = cosf(j*dTheta);
+			float s = sinf(j*dTheta);
+
+			v[v_i].Pos = XMFLOAT3((r * c) + x, y, (r * s) + z);
+			v[v_i].Size = XMFLOAT2(24.0f, 24.0f);
+		}
+
+		v[i * stride + j].Pos = v[i * stride].Pos;
+		v[i * stride + j].Size = v[i * stride].Size;
 	}
      
 	D3D11_BUFFER_DESC vbd;
     vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.ByteWidth = sizeof(Vertex::TreePointSprite) * TreeCount;
+	vbd.ByteWidth = sizeof(Vertex::TreePointSprite) * TreeCount * (vertices_per_circle + 1);
     vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vbd.CPUAccessFlags = 0;
     vbd.MiscFlags = 0;
@@ -740,7 +759,7 @@ void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
 	Effects::TreeSpriteFX->SetMaterial(mTreeMat);
 	Effects::TreeSpriteFX->SetTreeTextureMapArray(mTreeTextureMapArraySRV);
 
-	md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
 	md3dImmediateContext->IASetInputLayout(InputLayouts::TreePointSprite);
 	UINT stride = sizeof(Vertex::TreePointSprite);
     UINT offset = 0;
@@ -771,8 +790,14 @@ void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
 		{
 			md3dImmediateContext->OMSetBlendState(RenderStates::AlphaToCoverageBS, blendFactor, 0xffffffff);
 		}
+
+		md3dImmediateContext->RSSetState(RenderStates::NoCullRS);
+
 		treeTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-		md3dImmediateContext->Draw(TreeCount, 0);
+		md3dImmediateContext->Draw(vertices_per_circle + 1, 0);
+		md3dImmediateContext->Draw(vertices_per_circle + 1, vertices_per_circle + 1);
+		md3dImmediateContext->Draw(vertices_per_circle + 1, (vertices_per_circle + 1 )* 2);
+		md3dImmediateContext->Draw(vertices_per_circle + 1, (vertices_per_circle + 1) * 3);
 
 		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
 	}
