@@ -94,6 +94,13 @@ private:
 
 	static const UINT TreeCount = 16;
 
+	// todo
+
+	const float sphere_radius = 3.0f;
+	static const UINT sphere_subdivisions = 2;
+
+	UINT sphere_vertices_count = 200;
+
 	bool mAlphaToCoverageOn;
 
 	XMFLOAT2 mWaterTexOffset;
@@ -358,135 +365,7 @@ void TreeBillboardApp::DrawScene()
 
 	DrawTreeSprites(viewProj);
 
-	//
-	// DrawTreeSprites() changes InputLayout and PrimitiveTopology, so change it based on 
-	// the geometry we draw next.
-	//
-
-	md3dImmediateContext->IASetInputLayout(InputLayouts::Basic32);
-    md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	UINT stride = sizeof(Vertex::Basic32);
-    UINT offset = 0;
-
-	//
-	// Set per frame constants for the rest of the objects.
-	//
-	Effects::BasicFX->SetDirLights(mDirLights);
-	Effects::BasicFX->SetEyePosW(mEyePosW);
-	Effects::BasicFX->SetFogColor(Colors::Silver);
-	Effects::BasicFX->SetFogStart(15.0f);
-	Effects::BasicFX->SetFogRange(175.0f);
-
-	//
-	// Figure out which technique to use.
-	//
-	ID3DX11EffectTechnique* boxTech;
-	ID3DX11EffectTechnique* landAndWavesTech;
- 
-	switch(mRenderOptions)
-	{
-	case RenderOptions::Lighting:
-		boxTech = Effects::BasicFX->Light3Tech;
-		landAndWavesTech = Effects::BasicFX->Light3Tech;
-		break;
-	case RenderOptions::Textures:
-		boxTech = Effects::BasicFX->Light3TexAlphaClipTech;
-		landAndWavesTech = Effects::BasicFX->Light3TexTech;
-		break;
-	case RenderOptions::TexturesAndFog:
-		boxTech = Effects::BasicFX->Light3TexAlphaClipFogTech;
-		landAndWavesTech = Effects::BasicFX->Light3TexFogTech;
-		break;
-	}
-
-	D3DX11_TECHNIQUE_DESC techDesc;
-
-	//
-	// Draw the box.
-	// 
-
-	boxTech->GetDesc( &techDesc );
-	for(UINT p = 0; p < techDesc.Passes; ++p)
-    {
-		md3dImmediateContext->IASetVertexBuffers(0, 1, &mBoxVB, &stride, &offset);
-		md3dImmediateContext->IASetIndexBuffer(mBoxIB, DXGI_FORMAT_R32_UINT, 0);
-
-		// Set per object constants.
-		XMMATRIX world = XMLoadFloat4x4(&mBoxWorld);
-		XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
-		XMMATRIX worldViewProj = world*view*proj;
-		
-		Effects::BasicFX->SetWorld(world);
-		Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
-		Effects::BasicFX->SetWorldViewProj(worldViewProj);
-		Effects::BasicFX->SetTexTransform(XMMatrixIdentity());
-		Effects::BasicFX->SetMaterial(mBoxMat);
-		Effects::BasicFX->SetDiffuseMap(mBoxMapSRV);
-
-		//md3dImmediateContext->OMSetBlendState(RenderStates::AlphaToCoverageBS, blendFactor, 0xffffffff);
-		md3dImmediateContext->RSSetState(RenderStates::NoCullRS);
-		boxTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-		md3dImmediateContext->DrawIndexed(36, 0, 0);
-
-		// Restore default render state.
-		md3dImmediateContext->RSSetState(0);
-	}
-
-	//
-	// Draw the hills and water with texture and fog (no alpha clipping needed).
-	//
-
-	landAndWavesTech->GetDesc( &techDesc );
-    for(UINT p = 0; p < techDesc.Passes; ++p)
-    {
-		//
-		// Draw the hills.
-		//
-		md3dImmediateContext->IASetVertexBuffers(0, 1, &mLandVB, &stride, &offset);
-		md3dImmediateContext->IASetIndexBuffer(mLandIB, DXGI_FORMAT_R32_UINT, 0);
-
-		// Set per object constants.
-		XMMATRIX world = XMLoadFloat4x4(&mLandWorld);
-		XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
-		XMMATRIX worldViewProj = world*view*proj;
-		
-		Effects::BasicFX->SetWorld(world);
-		Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
-		Effects::BasicFX->SetWorldViewProj(worldViewProj);
-		Effects::BasicFX->SetTexTransform(XMLoadFloat4x4(&mGrassTexTransform));
-		Effects::BasicFX->SetMaterial(mLandMat);
-		Effects::BasicFX->SetDiffuseMap(mGrassMapSRV);
-
-		landAndWavesTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-		md3dImmediateContext->DrawIndexed(mLandIndexCount, 0, 0);
-
-		//
-		// Draw the waves.
-		//
-		md3dImmediateContext->IASetVertexBuffers(0, 1, &mWavesVB, &stride, &offset);
-		md3dImmediateContext->IASetIndexBuffer(mWavesIB, DXGI_FORMAT_R32_UINT, 0);
-
-		// Set per object constants.
-		world = XMLoadFloat4x4(&mWavesWorld);
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world*view*proj;
-		
-		Effects::BasicFX->SetWorld(world);
-		Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
-		Effects::BasicFX->SetWorldViewProj(worldViewProj);
-		Effects::BasicFX->SetTexTransform(XMLoadFloat4x4(&mWaterTexTransform));
-		Effects::BasicFX->SetMaterial(mWavesMat);
-		Effects::BasicFX->SetDiffuseMap(mWavesMapSRV);
-
-		md3dImmediateContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
-		landAndWavesTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-		md3dImmediateContext->DrawIndexed(3*mWaves.TriangleCount(), 0, 0);
-
-		// Restore default blend state
-		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
-    }
-
-	HR(mSwapChain->Present(0, 0));
+	HR(mSwapChain->Present(1, 0));
 }
 
 void TreeBillboardApp::OnMouseDown(WPARAM btnState, int x, int y)
@@ -703,30 +582,29 @@ void TreeBillboardApp::BuildCrateGeometryBuffers()
 
 void TreeBillboardApp::BuildTreeSpritesBuffer()
 {
-	Vertex::TreePointSprite v[TreeCount];
+	GeometryGenerator gen;
+	GeometryGenerator::MeshData sphere;
 
-	for(UINT i = 0; i < TreeCount; ++i)
-	{
-		float x = MathHelper::RandF(-35.0f, 35.0f);
-		float z = MathHelper::RandF(-35.0f, 35.0f);
-		float y = GetHillHeight(x,z);
+	gen.CreateGeosphere(sphere_subdivisions, sphere_radius, sphere);
 
-		// Move tree slightly above land height.
-		y += 10.0f;
+	std::vector<Vertex::Basic32> vertices(sphere.Vertices.size());
 
-		v[i].Pos  = XMFLOAT3(x,y,z);
-		v[i].Size = XMFLOAT2(24.0f, 24.0f);
+	for(const auto &v: sphere.Vertices) {
+		Vertex::Basic32 the_v{v.Position, v.Normal, v.TexC};
+		vertices.push_back(the_v);
 	}
-     
+
 	D3D11_BUFFER_DESC vbd;
     vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.ByteWidth = sizeof(Vertex::TreePointSprite) * TreeCount;
+	vbd.ByteWidth = sizeof(Vertex::Basic32) * vertices.size();
     vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vbd.CPUAccessFlags = 0;
     vbd.MiscFlags = 0;
     D3D11_SUBRESOURCE_DATA vinitData;
-    vinitData.pSysMem = v;
+    vinitData.pSysMem = &vertices[0];
     HR(md3dDevice->CreateBuffer(&vbd, &vinitData, &mTreeSpritesVB));
+
+	sphere_vertices_count = vertices.size();
 }
 
 void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
@@ -740,9 +618,9 @@ void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
 	Effects::TreeSpriteFX->SetMaterial(mTreeMat);
 	Effects::TreeSpriteFX->SetTreeTextureMapArray(mTreeTextureMapArraySRV);
 
-	md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-	md3dImmediateContext->IASetInputLayout(InputLayouts::TreePointSprite);
-	UINT stride = sizeof(Vertex::TreePointSprite);
+	md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	md3dImmediateContext->IASetInputLayout(InputLayouts::Basic32);
+	UINT stride = sizeof(Vertex::Basic32);
     UINT offset = 0;
 
 	ID3DX11EffectTechnique* treeTech;
@@ -767,13 +645,8 @@ void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
 
 		float blendFactor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
-		if(mAlphaToCoverageOn)
-		{
-			md3dImmediateContext->OMSetBlendState(RenderStates::AlphaToCoverageBS, blendFactor, 0xffffffff);
-		}
 		treeTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-		md3dImmediateContext->Draw(TreeCount, 0);
-
-		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
+		md3dImmediateContext->Draw(sphere_vertices_count, 0);
+		// md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
 	}
 }

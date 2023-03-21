@@ -40,7 +40,7 @@ void InputLayouts::InitAll(ID3D11Device* device)
 	//
 
 	Effects::TreeSpriteFX->Light3Tech->GetPassByIndex(0)->GetDesc(&passDesc);
-	HR(device->CreateInputLayout(InputLayoutDesc::TreePointSprite, 2, passDesc.pIAInputSignature, 
+	HR(device->CreateInputLayout(InputLayoutDesc::Basic32, 3, passDesc.pIAInputSignature, 
 		passDesc.IAInputSignatureSize, &TreePointSprite));
 }
 
