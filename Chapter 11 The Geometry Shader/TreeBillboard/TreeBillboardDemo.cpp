@@ -98,7 +98,7 @@ private:
 	// todo
 
 	const float sphere_radius = 1.0f;
-	static const UINT sphere_subdivisions = 0;
+	static const UINT sphere_subdivisions = 2;
 
 	UINT sphere_vertices_count = 200;
 	UINT sphere_index_count = 200;
@@ -628,7 +628,17 @@ void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
 	Effects::TreeSpriteFX->SetDirLights(mDirLights);
 	Effects::TreeSpriteFX->SetEyePosW(mEyePosW);
 	Effects::TreeSpriteFX->SetFogColor(Colors::Silver);
-	Effects::TreeSpriteFX->SetFogStart(15.0f);
+
+
+	int new_time_int = int(mTimer.TotalTime()) % 2;
+
+	float new_time = mTimer.TotalTime() - float(int(mTimer.TotalTime()));
+	new_time += float(new_time_int);
+
+	Effects::TreeSpriteFX->SetFogStart(new_time);
+
+	// Effects::TreeSpriteFX->SetFogStart(mTimer.TotalTime());
+
 	Effects::TreeSpriteFX->SetFogRange(175.0f);
 	Effects::TreeSpriteFX->SetViewProj(viewProj);
 	Effects::TreeSpriteFX->SetMaterial(mTreeMat);
