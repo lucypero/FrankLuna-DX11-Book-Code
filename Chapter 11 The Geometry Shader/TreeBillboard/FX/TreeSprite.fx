@@ -12,6 +12,14 @@ cbuffer cbPerObject
 	float4x4 gViewProj;
 };
 
+cbuffer cbFixed
+{
+	float explotion[20] = 
+	{
+		0.8, 1.0, 1.4, 1.2, 0.4, 0.1, 3.2, 2.2, 4.0, 1.9, 0.6, 0.8, 0.01, 0.5, 1.50, 1.4, 2.0, 0.5, 1.2, 1.0
+	};
+};
+
 struct VertexIn
 {
 	float3 PosL    : POSITION;
@@ -44,21 +52,6 @@ VertexOut VS(VertexIn vin)
 	vout.Tex   = vin.Tex;
 	return vout;
 }
-
-// read here on sunday:
-
-/*
-
-u figured it out. you were complicating things too much by worrying about triangle strips.
-
-NewSubdivide will return a triangle list every time.
-4 triangles per 1 input triangle.
-
-then on the GS just restart the strip every 3 vertices.
-
-done.
-
-*/
 
 [maxvertexcount(3)]
 void GS(triangle VertexOut gin[3], 
@@ -93,10 +86,16 @@ void GS(triangle VertexOut gin[3],
 	out_verts[1] = gin[1];
 	out_verts[2] = gin[2];
 
-	float variance = (1.0 + float(primID)) * 0.3 * 2.0;
+	float var_2 = explotion[primID % 20];
+
+	// this is with primid multiplied
+	// float variance = (1.0 + float(primID)) * 0.3 * 4.0 * var_2;
+
+
+	float variance = 0.3 * 150.0 * var_2;
 
 	// float new_time = fmod(gFogStart, 3.0);
-	float new_time = clamp(sin(gFogStart), 0.0, 1.0);
+	float new_time = clamp(sin(gFogStart * 2.0), 0.0, 1.0);
 
 	out_verts[0].PosL += face_normal * new_time * variance;
 	out_verts[1].PosL += face_normal * new_time * variance;
