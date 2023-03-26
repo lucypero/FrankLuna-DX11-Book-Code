@@ -108,5 +108,8 @@
     <CustomBuild Include="FX\TreeSprite.fx">
       <Filter>FX</Filter>
     </CustomBuild>
+    <CustomBuild Include="FX\TreeSprite-simple.fx">
+      <Filter>FX</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

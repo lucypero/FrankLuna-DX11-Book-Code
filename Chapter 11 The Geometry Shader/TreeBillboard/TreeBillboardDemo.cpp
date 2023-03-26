@@ -67,6 +67,7 @@ private:
 	ID3D11Buffer* mBoxIB;
 
 	ID3D11Buffer* mTreeSpritesVB;
+	ID3D11Buffer* mTreeSpritesIB;
 
 	ID3D11ShaderResourceView* mGrassMapSRV;
 	ID3D11ShaderResourceView* mWavesMapSRV;
@@ -96,10 +97,11 @@ private:
 
 	// todo
 
-	const float sphere_radius = 3.0f;
-	static const UINT sphere_subdivisions = 2;
+	const float sphere_radius = 1.0f;
+	static const UINT sphere_subdivisions = 0;
 
 	UINT sphere_vertices_count = 200;
+	UINT sphere_index_count = 200;
 
 	bool mAlphaToCoverageOn;
 
@@ -350,7 +352,7 @@ void TreeBillboardApp::UpdateScene(float dt)
 
 void TreeBillboardApp::DrawScene()
 {
-	md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Colors::Silver));
+	md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Colors::Black));
 	md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
  
 	float blendFactor[] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -406,7 +408,7 @@ void TreeBillboardApp::OnMouseMove(WPARAM btnState, int x, int y)
 		mRadius += dx - dy;
 
 		// Restrict the radius.
-		mRadius = MathHelper::Clamp(mRadius, 20.0f, 500.0f);
+		mRadius = MathHelper::Clamp(mRadius, 5.0f, 500.0f);
 	}
 
 	mLastMousePos.x = x;
@@ -585,13 +587,15 @@ void TreeBillboardApp::BuildTreeSpritesBuffer()
 	GeometryGenerator gen;
 	GeometryGenerator::MeshData sphere;
 
-	gen.CreateGeosphere(sphere_subdivisions, sphere_radius, sphere);
+	gen.CreateGeosphere(sphere_radius , sphere_subdivisions, sphere);
 
 	std::vector<Vertex::Basic32> vertices(sphere.Vertices.size());
 
-	for(const auto &v: sphere.Vertices) {
-		Vertex::Basic32 the_v{v.Position, v.Normal, v.TexC};
-		vertices.push_back(the_v);
+	for(UINT i = 0; i < sphere.Vertices.size(); ++i)
+	{
+		vertices[i].Pos    = sphere.Vertices[i].Position;
+		vertices[i].Normal = sphere.Vertices[i].Normal;
+		vertices[i].Tex    = sphere.Vertices[i].TexC;
 	}
 
 	D3D11_BUFFER_DESC vbd;
@@ -605,6 +609,18 @@ void TreeBillboardApp::BuildTreeSpritesBuffer()
     HR(md3dDevice->CreateBuffer(&vbd, &vinitData, &mTreeSpritesVB));
 
 	sphere_vertices_count = vertices.size();
+
+	D3D11_BUFFER_DESC ibd;
+    ibd.Usage = D3D11_USAGE_IMMUTABLE;
+	ibd.ByteWidth = sizeof(UINT) * sphere.Indices.size();
+    ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    ibd.CPUAccessFlags = 0;
+    ibd.MiscFlags = 0;
+    D3D11_SUBRESOURCE_DATA iinitData;
+	iinitData.pSysMem = &sphere.Indices[0];
+    HR(md3dDevice->CreateBuffer(&ibd, &iinitData, &mTreeSpritesIB));
+
+	sphere_index_count = sphere.Indices.size();
 }
 
 void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
@@ -637,16 +653,20 @@ void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
 		break;
 	}
 
+	md3dImmediateContext->RSSetState(RenderStates::WireframeRS);
+
 	D3DX11_TECHNIQUE_DESC techDesc;
 	treeTech->GetDesc( &techDesc );
 	for(UINT p = 0; p < techDesc.Passes; ++p)
     {
 		md3dImmediateContext->IASetVertexBuffers(0, 1, &mTreeSpritesVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mTreeSpritesIB, DXGI_FORMAT_R32_UINT, 0);
 
 		float blendFactor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
 		treeTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-		md3dImmediateContext->Draw(sphere_vertices_count, 0);
+		md3dImmediateContext->DrawIndexed(sphere_index_count, 0, 0);
+		// md3dImmediateContext->Draw(sphere_vertices_count, 0);
 		// md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
 	}
 }
