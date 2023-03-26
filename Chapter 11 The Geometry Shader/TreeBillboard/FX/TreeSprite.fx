@@ -95,9 +95,12 @@ void GS(triangle VertexOut gin[3],
 
 	float variance = (1.0 + float(primID)) * 0.3 * 2.0;
 
-	out_verts[0].PosL += face_normal * gFogStart * variance;
-	out_verts[1].PosL += face_normal * gFogStart * variance;
-	out_verts[2].PosL += face_normal * gFogStart * variance;
+	// float new_time = fmod(gFogStart, 3.0);
+	float new_time = clamp(sin(gFogStart), 0.0, 1.0);
+
+	out_verts[0].PosL += face_normal * new_time * variance;
+	out_verts[1].PosL += face_normal * new_time * variance;
+	out_verts[2].PosL += face_normal * new_time * variance;
 
 	[unroll]
 	for(int j = 0; j < 3; ++j)

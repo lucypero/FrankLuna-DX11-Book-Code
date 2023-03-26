@@ -630,15 +630,7 @@ void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
 	Effects::TreeSpriteFX->SetFogColor(Colors::Silver);
 
 
-	int new_time_int = int(mTimer.TotalTime()) % 2;
-
-	float new_time = mTimer.TotalTime() - float(int(mTimer.TotalTime()));
-	new_time += float(new_time_int);
-
-	Effects::TreeSpriteFX->SetFogStart(new_time);
-
-	// Effects::TreeSpriteFX->SetFogStart(mTimer.TotalTime());
-
+	Effects::TreeSpriteFX->SetFogStart(mTimer.TotalTime());
 	Effects::TreeSpriteFX->SetFogRange(175.0f);
 	Effects::TreeSpriteFX->SetViewProj(viewProj);
 	Effects::TreeSpriteFX->SetMaterial(mTreeMat);
