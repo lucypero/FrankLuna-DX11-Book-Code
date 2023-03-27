@@ -41,6 +41,7 @@ public:
 	bool Init();
 	void OnResize();
 	void UpdateScene(float dt);
+
 	void DrawScene(); 
 
 	void OnMouseDown(WPARAM btnState, int x, int y);
@@ -341,10 +342,13 @@ void TreeBillboardApp::UpdateScene(float dt)
 		mAlphaToCoverageOn = false;
 }
 
+
 void TreeBillboardApp::DrawScene()
 {
 	md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Colors::Silver));
 	md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+	// drawing the lines
  
 	float blendFactor[] = {0.0f, 0.0f, 0.0f, 0.0f};
  
@@ -364,9 +368,140 @@ void TreeBillboardApp::DrawScene()
 	//
 
 	md3dImmediateContext->IASetInputLayout(InputLayouts::Basic32);
-    md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	UINT stride = sizeof(Vertex::Basic32);
     UINT offset = 0;
+
+	//
+	// Set per frame constants for the rest of the objects.
+	//
+	Effects::BasicFX->SetDirLights(mDirLights);
+	Effects::BasicFX->SetEyePosW(mEyePosW);
+	Effects::BasicFX->SetFogColor(Colors::Silver);
+	Effects::BasicFX->SetFogStart(15.0f);
+	Effects::BasicFX->SetFogRange(175.0f);
+
+
+	Effects::LinesFX->SetDirLights(mDirLights);
+	Effects::LinesFX->SetEyePosW(mEyePosW);
+	Effects::LinesFX->SetFogColor(Colors::Silver);
+	Effects::LinesFX->SetFogStart(15.0f);
+	Effects::LinesFX->SetFogRange(175.0f);
+
+	//
+	// Figure out which technique to use.
+	//
+	ID3DX11EffectTechnique* boxTech;
+	ID3DX11EffectTechnique* landAndWavesTech;
+
+	boxTech = Effects::LinesFX->TheTech;
+	landAndWavesTech = Effects::LinesFX->TheTech;
+
+	D3DX11_TECHNIQUE_DESC techDesc;
+	Effects::LinesFX->SetViewProj(viewProj);
+
+	//
+	// Draw the box.
+	// 
+
+	boxTech->GetDesc( &techDesc );
+	for(UINT p = 0; p < techDesc.Passes; ++p)
+    {
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mBoxVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mBoxIB, DXGI_FORMAT_R32_UINT, 0);
+
+		// Set per object constants.
+		XMMATRIX world = XMLoadFloat4x4(&mBoxWorld);
+		XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
+		XMMATRIX worldViewProj = world*view*proj;
+		
+		Effects::LinesFX->SetWorld(world);
+		Effects::LinesFX->SetWorldInvTranspose(worldInvTranspose);
+		Effects::LinesFX->SetWorldViewProj(worldViewProj);
+		Effects::LinesFX->SetTexTransform(XMMatrixIdentity());
+		Effects::LinesFX->SetMaterial(mBoxMat);
+		Effects::LinesFX->SetDiffuseMap(mBoxMapSRV);
+
+		//md3dImmediateContext->OMSetBlendState(RenderStates::AlphaToCoverageBS, blendFactor, 0xffffffff);
+		md3dImmediateContext->RSSetState(RenderStates::NoCullRS);
+		boxTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
+		md3dImmediateContext->DrawIndexed(36, 0, 0);
+
+		// Restore default render state.
+		md3dImmediateContext->RSSetState(0);
+	}
+
+	//
+	// Draw the hills and water with texture and fog (no alpha clipping needed).
+	//
+
+	landAndWavesTech->GetDesc( &techDesc );
+    for(UINT p = 0; p < techDesc.Passes; ++p)
+    {
+		//
+		// Draw the hills.
+		//
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mLandVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mLandIB, DXGI_FORMAT_R32_UINT, 0);
+
+		// Set per object constants.
+		XMMATRIX world = XMLoadFloat4x4(&mLandWorld);
+		XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
+		XMMATRIX worldViewProj = world*view*proj;
+		
+		Effects::LinesFX->SetWorld(world);
+		Effects::LinesFX->SetWorldInvTranspose(worldInvTranspose);
+		Effects::LinesFX->SetWorldViewProj(worldViewProj);
+		Effects::LinesFX->SetTexTransform(XMLoadFloat4x4(&mGrassTexTransform));
+		Effects::LinesFX->SetMaterial(mLandMat);
+		Effects::LinesFX->SetDiffuseMap(mGrassMapSRV);
+
+		landAndWavesTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
+		md3dImmediateContext->DrawIndexed(mLandIndexCount, 0, 0);
+
+		//
+		// Draw the waves.
+		//
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mWavesVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mWavesIB, DXGI_FORMAT_R32_UINT, 0);
+
+		// Set per object constants.
+		world = XMLoadFloat4x4(&mWavesWorld);
+		worldInvTranspose = MathHelper::InverseTranspose(world);
+		worldViewProj = world*view*proj;
+		
+		Effects::LinesFX->SetWorld(world);
+		Effects::LinesFX->SetWorldInvTranspose(worldInvTranspose);
+		Effects::LinesFX->SetWorldViewProj(worldViewProj);
+		Effects::LinesFX->SetTexTransform(XMLoadFloat4x4(&mWaterTexTransform));
+		Effects::LinesFX->SetMaterial(mWavesMat);
+		Effects::LinesFX->SetDiffuseMap(mWavesMapSRV);
+
+		md3dImmediateContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
+		landAndWavesTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
+		md3dImmediateContext->DrawIndexed(3*mWaves.TriangleCount(), 0, 0);
+
+		// Restore default blend state
+		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
+    }
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////
+
+	// drawing everything else
+
+	//
+	// Draw the tree sprites
+	//
+
+	DrawTreeSprites(viewProj);
+
+	//
+	// DrawTreeSprites() changes InputLayout and PrimitiveTopology, so change it based on 
+	// the geometry we draw next.
+	//
+
+	md3dImmediateContext->IASetInputLayout(InputLayouts::Basic32);
+    md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//
 	// Set per frame constants for the rest of the objects.
@@ -380,8 +515,6 @@ void TreeBillboardApp::DrawScene()
 	//
 	// Figure out which technique to use.
 	//
-	ID3DX11EffectTechnique* boxTech;
-	ID3DX11EffectTechnique* landAndWavesTech;
  
 	switch(mRenderOptions)
 	{
@@ -398,8 +531,6 @@ void TreeBillboardApp::DrawScene()
 		landAndWavesTech = Effects::BasicFX->Light3TexFogTech;
 		break;
 	}
-
-	D3DX11_TECHNIQUE_DESC techDesc;
 
 	//
 	// Draw the box.

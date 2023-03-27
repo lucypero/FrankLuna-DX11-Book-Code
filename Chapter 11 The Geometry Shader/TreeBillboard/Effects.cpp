@@ -78,6 +78,29 @@ BasicEffect::~BasicEffect()
 }
 #pragma endregion
 
+LinesEffect::LinesEffect(ID3D11Device* device, const std::wstring& filename)
+	: Effect(device, filename)
+{
+	TheTech    = mFX->GetTechniqueByName("TheTech");
+
+	WorldViewProj     = mFX->GetVariableByName("gWorldViewProj")->AsMatrix();
+	World             = mFX->GetVariableByName("gWorld")->AsMatrix();
+	ViewProj          = mFX->GetVariableByName("gViewProj")->AsMatrix();
+	WorldInvTranspose = mFX->GetVariableByName("gWorldInvTranspose")->AsMatrix();
+	TexTransform      = mFX->GetVariableByName("gTexTransform")->AsMatrix();
+	EyePosW           = mFX->GetVariableByName("gEyePosW")->AsVector();
+	FogColor          = mFX->GetVariableByName("gFogColor")->AsVector();
+	FogStart          = mFX->GetVariableByName("gFogStart")->AsScalar();
+	FogRange          = mFX->GetVariableByName("gFogRange")->AsScalar();
+	DirLights         = mFX->GetVariableByName("gDirLights");
+	Mat               = mFX->GetVariableByName("gMaterial");
+	DiffuseMap        = mFX->GetVariableByName("gDiffuseMap")->AsShaderResource();
+}
+
+LinesEffect::~LinesEffect()
+{
+}
+
 #pragma region TreeSpriteEffect
 TreeSpriteEffect::TreeSpriteEffect(ID3D11Device* device, const std::wstring& filename)
 	: Effect(device, filename)
@@ -105,16 +128,19 @@ TreeSpriteEffect::~TreeSpriteEffect()
 
 BasicEffect*      Effects::BasicFX      = 0;
 TreeSpriteEffect* Effects::TreeSpriteFX = 0;
+LinesEffect* Effects::LinesFX = 0;
 
 void Effects::InitAll(ID3D11Device* device)
 {
 	BasicFX = new BasicEffect(device, L"FX/Basic.fxo");
 	TreeSpriteFX = new TreeSpriteEffect(device, L"FX/TreeSprite.fxo");
+	LinesFX = new LinesEffect(device, L"FX/Lines.fxo");
 }
 
 void Effects::DestroyAll()
 {
 	SafeDelete(BasicFX);
 	SafeDelete(TreeSpriteFX);
+	SafeDelete(LinesFX);
 }
 #pragma endregion
