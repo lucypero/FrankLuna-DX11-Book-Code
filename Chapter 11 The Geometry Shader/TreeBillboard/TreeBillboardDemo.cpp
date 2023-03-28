@@ -67,6 +67,7 @@ private:
 	ID3D11Buffer* mBoxIB;
 
 	ID3D11Buffer* mTreeSpritesVB;
+	ID3D11Buffer* mTreeSpritesIB;
 
 	ID3D11ShaderResourceView* mGrassMapSRV;
 	ID3D11ShaderResourceView* mWavesMapSRV;
@@ -717,6 +718,7 @@ void TreeBillboardApp::BuildTreeSpritesBuffer()
 		v[i].Pos  = XMFLOAT3(x,y,z);
 		v[i].Size = XMFLOAT2(24.0f, 24.0f);
 	}
+
      
 	D3D11_BUFFER_DESC vbd;
     vbd.Usage = D3D11_USAGE_IMMUTABLE;
@@ -727,6 +729,22 @@ void TreeBillboardApp::BuildTreeSpritesBuffer()
     D3D11_SUBRESOURCE_DATA vinitData;
     vinitData.pSysMem = v;
     HR(md3dDevice->CreateBuffer(&vbd, &vinitData, &mTreeSpritesVB));
+
+	unsigned int indices[TreeCount];
+
+	for(int i = 0; i<TreeCount; ++i) {
+		indices[i] = i;
+	}
+
+	D3D11_BUFFER_DESC ibd;
+    ibd.Usage = D3D11_USAGE_IMMUTABLE;
+	ibd.ByteWidth = sizeof(UINT) * TreeCount;
+    ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    ibd.CPUAccessFlags = 0;
+    ibd.MiscFlags = 0;
+    D3D11_SUBRESOURCE_DATA iinitData;
+	iinitData.pSysMem = indices;
+    HR(md3dDevice->CreateBuffer(&ibd, &iinitData, &mTreeSpritesIB));
 }
 
 void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
@@ -764,6 +782,7 @@ void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
 	for(UINT p = 0; p < techDesc.Passes; ++p)
     {
 		md3dImmediateContext->IASetVertexBuffers(0, 1, &mTreeSpritesVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mTreeSpritesIB, DXGI_FORMAT_R32_UINT, 0);
 
 		float blendFactor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
@@ -772,7 +791,12 @@ void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
 			md3dImmediateContext->OMSetBlendState(RenderStates::AlphaToCoverageBS, blendFactor, 0xffffffff);
 		}
 		treeTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-		md3dImmediateContext->Draw(TreeCount, 0);
+		// md3dImmediateContext->Draw(TreeCount, 0);
+
+		md3dImmediateContext->DrawIndexed(4, 0, 0);
+		md3dImmediateContext->DrawIndexed(4, 4, 0);
+		md3dImmediateContext->DrawIndexed(4, 8, 0);
+		md3dImmediateContext->DrawIndexed(4, 12, 0);
 
 		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
 	}
