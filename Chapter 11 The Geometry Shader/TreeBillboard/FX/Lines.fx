@@ -62,13 +62,25 @@ VertexIn VS(VertexIn vin)
 }
 
 [maxvertexcount(2)]
-void GS(point VertexIn gin[1], 
+void GS(triangle VertexIn gin[3], 
         inout LineStream<GeoOut> lineStream)
 {
     GeoOut p1, p2;
 
-    float3 p1_w = mul(float4(gin[0].PosL, 1.0f), gWorld).xyz;
-    float3 p2_w = p1_w + normalize(gin[0].NormalL) * 3.0f;
+	// calculate p1 position
+
+    float3 gin1_w = mul(float4(gin[0].PosL, 1.0f), gWorld).xyz;
+    float3 gin2_w = mul(float4(gin[1].PosL, 1.0f), gWorld).xyz;
+    float3 gin3_w = mul(float4(gin[2].PosL, 1.0f), gWorld).xyz;
+
+	float3 p1_w = (gin1_w + gin2_w + gin3_w) / 3.0;
+
+	// calculate face normal
+	float3 f1 = gin2_w - gin1_w;
+	float3 f2 = gin3_w - gin1_w;
+	float3 the_normal = normalize(cross(f1,f2)) * 3.0f;
+
+    float3 p2_w = p1_w + the_normal;
 
     p1.PosH = mul(float4(p1_w, 1.0f), gViewProj);
     p2.PosH = mul(float4(p2_w, 1.0f), gViewProj);
