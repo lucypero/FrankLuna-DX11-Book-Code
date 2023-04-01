@@ -772,7 +772,10 @@ void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
 			md3dImmediateContext->OMSetBlendState(RenderStates::AlphaToCoverageBS, blendFactor, 0xffffffff);
 		}
 		treeTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-		md3dImmediateContext->Draw(TreeCount, 0);
+		md3dImmediateContext->Draw(4, 0);
+		md3dImmediateContext->Draw(4, 4);
+		md3dImmediateContext->Draw(4, 8);
+		md3dImmediateContext->Draw(4, 12);
 
 		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
 	}

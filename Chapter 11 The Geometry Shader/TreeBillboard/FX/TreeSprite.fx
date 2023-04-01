@@ -147,7 +147,7 @@ float4 PS(GeoOut pin, uniform int gLightCount, uniform bool gUseTexure, uniform 
     if(gUseTexure)
 	{
 		// Sample texture.
-		float3 uvw = float3(pin.Tex, pin.PrimID%4);
+		float3 uvw = float3(pin.Tex, pin.PrimID);
 		texColor = gTreeMapArray.Sample( samLinear, uvw );
 
 		if(gAlphaClip)
