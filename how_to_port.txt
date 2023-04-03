@@ -18,3 +18,7 @@ D3DX11CreateShaderResourceViewFromFile -> DirectX::CreateDDSTextureFromFile
 - in VS, change the library names in the linker input tab as they are on the already ported chapters.
 
 - you might have to add code/files to Common if the chapter added more stuff to it.
+
+  dxerr.cpp/.h
+  DDSTextureLoader.cpp/.h
+
