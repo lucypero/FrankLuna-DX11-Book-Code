@@ -8,8 +8,11 @@
 #define BLURFILTER_H
 
 #include <Windows.h>
-#include <xnamath.h>
+#include <DirectXMath.h>
+#include <DirectXPackedVector.h>
 #include "d3dUtil.h"
+
+using namespace DirectX;
 
 class BlurFilter
 {

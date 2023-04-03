@@ -220,14 +220,19 @@ bool BlurApp::Init()
 	InputLayouts::InitAll(md3dDevice);
 	RenderStates::InitAll(md3dDevice);
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/grass.dds", 0, 0, &mGrassMapSRV, 0 ));
+	ID3D11Resource* texResource = nullptr;
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/water2.dds", 0, 0, &mWavesMapSRV, 0 ));
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, 
+		L"Textures/grass.dds", &texResource, &mGrassMapSRV));
+	ReleaseCOM(texResource);
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/WireFence.dds", 0, 0, &mCrateSRV, 0 ));
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, 
+		L"Textures/water2.dds", &texResource, &mWavesMapSRV));
+	ReleaseCOM(texResource);
+
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, 
+		L"Textures/WireFence.dds", &texResource, &mCrateSRV));
+	ReleaseCOM(texResource);
 
 	mWaves.Init(160, 160, 1.0f, 0.03f, 5.0f, 0.3f);
 
