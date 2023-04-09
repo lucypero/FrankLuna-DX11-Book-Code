@@ -88,6 +88,7 @@
     <ClCompile Include="..\..\Common\GeometryGenerator.cpp" />
     <ClCompile Include="..\..\Common\LightHelper.cpp" />
     <ClCompile Include="..\..\Common\MathHelper.cpp" />
+    <ClCompile Include="..\..\Common\utils.cpp" />
     <ClCompile Include="..\..\Common\Waves.cpp" />
     <ClCompile Include="Blur.cpp" />
     <ClCompile Include="BlurFilter.cpp" />
@@ -104,7 +105,9 @@
     <ClInclude Include="..\..\Common\GameTimer.h" />
     <ClInclude Include="..\..\Common\GeometryGenerator.h" />
     <ClInclude Include="..\..\Common\LightHelper.h" />
+    <ClInclude Include="..\..\Common\lucytypes.h" />
     <ClInclude Include="..\..\Common\MathHelper.h" />
+    <ClInclude Include="..\..\Common\utils.h" />
     <ClInclude Include="..\..\Common\Waves.h" />
     <ClInclude Include="BlurFilter.h" />
     <ClInclude Include="Effects.h" />

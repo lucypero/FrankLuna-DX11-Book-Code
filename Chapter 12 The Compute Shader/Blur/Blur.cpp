@@ -24,6 +24,7 @@
 #include "RenderStates.h"
 #include "Waves.h"
 #include "BlurFilter.h"
+#include "utils.h"
 
 enum RenderOptions
 {
@@ -96,6 +97,8 @@ private:
 
 	XMFLOAT4X4 mView;
 	XMFLOAT4X4 mProj;
+
+	int mBlurCount = 4;
 
 	UINT mLandIndexCount;
 	UINT mWaveIndexCount;
@@ -338,6 +341,17 @@ void BlurApp::UpdateScene(float dt)
 
 	if( GetAsyncKeyState('3') & 0x8000 )
 		mRenderOptions = RenderOptions::TexturesAndFog; 
+
+	if( GetAsyncKeyState(VK_ADD) & 0x01) {
+		++mBlurCount;
+		log("mBlurCount: %d", mBlurCount);
+	}
+
+	if( GetAsyncKeyState(VK_SUBTRACT) & 0x01 ) {
+		mBlurCount = --mBlurCount < 0 ? 0 : mBlurCount;
+		log("mBlurCount: %d", mBlurCount);
+	}
+
 }
 
 void BlurApp::DrawScene()
@@ -366,7 +380,8 @@ void BlurApp::DrawScene()
 	md3dImmediateContext->OMSetRenderTargets(1, renderTargets, mDepthStencilView);
 
 	//mBlur.SetGaussianWeights(4.0f);
-	mBlur.BlurInPlace(md3dImmediateContext, mOffscreenSRV, mOffscreenUAV, 4);
+	if (mBlurCount > 0)
+		mBlur.BlurInPlace(md3dImmediateContext, mOffscreenSRV, mOffscreenUAV, mBlurCount);
 
 	//
 	// Draw fullscreen quad with texture of blurred scene on it.
@@ -797,8 +812,6 @@ void BlurApp::BuildScreenQuadGeometryBuffers()
 
 void BlurApp::BuildOffscreenViews()
 {
-	// We call this function everytime the window is resized so that the render target is a quarter
-	// the client area dimensions.  So Release the previous views before we create new ones.
 	ReleaseCOM(mOffscreenSRV);
 	ReleaseCOM(mOffscreenRTV);
 	ReleaseCOM(mOffscreenUAV);
@@ -820,12 +833,9 @@ void BlurApp::BuildOffscreenViews()
 	ID3D11Texture2D* offscreenTex = 0;
 	HR(md3dDevice->CreateTexture2D(&texDesc, 0, &offscreenTex));
 
-	// Null description means to create a view to all mipmap levels using 
-	// the format the texture was created with.
 	HR(md3dDevice->CreateShaderResourceView(offscreenTex, 0, &mOffscreenSRV));
 	HR(md3dDevice->CreateRenderTargetView(offscreenTex, 0, &mOffscreenRTV));
 	HR(md3dDevice->CreateUnorderedAccessView(offscreenTex, 0, &mOffscreenUAV));
 
-	// View saves a reference to the texture so we can release our reference.
 	ReleaseCOM(offscreenTex);
 }
