@@ -48,6 +48,8 @@ public:
 	void OnMouseUp(WPARAM btnState, int x, int y);
 	void OnMouseMove(WPARAM btnState, int x, int y);
 
+	void DoExercise1();
+
 private:
 	void UpdateWaves();
 	void DrawWrapper();
@@ -213,6 +215,132 @@ BlurApp::~BlurApp()
 	RenderStates::DestroyAll();
 }
 
+void BlurApp::DoExercise1() {
+
+	XMFLOAT3 comp_input[64];
+
+	//
+
+	for(int i = 0; i < 64; i++) {
+ 		// Generate random magnitudes between 1 and 10
+        float magnitude = static_cast<float>(std::rand()) / RAND_MAX * 9.0f + 1.0f;
+
+        // Generate random directions on the unit sphere
+        float theta = static_cast<float>(std::rand()) / RAND_MAX * XM_2PI;
+        float phi = static_cast<float>(std::rand()) / RAND_MAX * XM_PI;
+
+        comp_input[i].x = magnitude * std::sin(phi) * std::cos(theta);
+        comp_input[i].y = magnitude * std::sin(phi) * std::sin(theta);
+        comp_input[i].z = magnitude * std::cos(phi);
+	}
+
+	// Create the input buffer
+	D3D11_BUFFER_DESC inputBufferDesc;
+	inputBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	inputBufferDesc.ByteWidth = sizeof(XMFLOAT3) * 64;
+	inputBufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	inputBufferDesc.CPUAccessFlags = 0;
+	inputBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	inputBufferDesc.StructureByteStride = sizeof(XMFLOAT3);
+
+	D3D11_SUBRESOURCE_DATA inputBufferData;
+	inputBufferData.pSysMem = comp_input;
+	inputBufferData.SysMemPitch = 0;
+	inputBufferData.SysMemSlicePitch = 0;
+
+	ID3D11Buffer* inputBuffer;
+	HR(md3dDevice->CreateBuffer(&inputBufferDesc, &inputBufferData, &inputBuffer));
+
+	// Create the input buffer SRV
+	D3D11_SHADER_RESOURCE_VIEW_DESC inputBufferSRVDesc;
+	inputBufferSRVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	inputBufferSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+
+	inputBufferSRVDesc.Buffer.ElementOffset = 0;
+	inputBufferSRVDesc.Buffer.ElementWidth = 64;
+
+	ID3D11ShaderResourceView* inputBufferSRV;
+	HR(md3dDevice->CreateShaderResourceView(inputBuffer, &inputBufferSRVDesc, &inputBufferSRV));
+
+	// create output buffer and UAV
+
+	D3D11_BUFFER_DESC outputBufferDesc = {};
+	outputBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	outputBufferDesc.ByteWidth = sizeof(float) * 64;
+	outputBufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+	outputBufferDesc.StructureByteStride = sizeof(float);
+	outputBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+
+	ID3D11Buffer* outputBuffer;
+	HR(md3dDevice->CreateBuffer(&outputBufferDesc, 0, &outputBuffer));
+
+	D3D11_UNORDERED_ACCESS_VIEW_DESC outputBufferUAVDesc = {};
+	outputBufferUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	outputBufferUAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	outputBufferUAVDesc.Buffer.FirstElement = 0;
+	outputBufferUAVDesc.Buffer.NumElements = 64;
+
+	ID3D11UnorderedAccessView* outputBufferUAV;
+	HR(md3dDevice->CreateUnorderedAccessView(outputBuffer, &outputBufferUAVDesc, &outputBufferUAV));
+
+	// here you bind the input buffer SRV and output buffer UAV to the compute shader
+
+	// Bind the input buffer SRV to the compute shader
+	md3dImmediateContext->CSSetShaderResources(0, 1, &inputBufferSRV);
+
+
+	Effects::VectorFX->SetInput(inputBufferSRV);
+	Effects::VectorFX->SetOutput(outputBufferUAV);
+	Effects::VectorFX->tech->GetPassByIndex(0)->Apply(0, md3dImmediateContext);
+
+	md3dImmediateContext->Dispatch(1, 1, 1);
+
+	// unbind the input buffer SRV and output buffer UAV from the compute shader
+
+	// Unbind the input buffer SRV from the compute shader
+	ID3D11ShaderResourceView* nullSRV[1] = { 0 };
+	md3dImmediateContext->CSSetShaderResources(0, 1, nullSRV);
+
+	// Unbind the output buffer UAV from the compute shader
+	ID3D11UnorderedAccessView* nullUAV[1] = { 0 };
+	md3dImmediateContext->CSSetUnorderedAccessViews(0, 1, nullUAV, 0);
+
+	// Create a system memory version of the buffer to read the
+	// results back from.
+	D3D11_BUFFER_DESC outputDesc = {};
+	outputDesc.Usage = D3D11_USAGE_STAGING;
+	outputDesc.BindFlags = 0;
+	outputDesc.ByteWidth = sizeof(float) * 64;
+	outputDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+	outputDesc.StructureByteStride = sizeof(float);
+	ID3D11Buffer* mOutputDebugBuffer;
+	HR(md3dDevice->CreateBuffer(&outputDesc, 0, &mOutputDebugBuffer));
+
+	// Copy the results from the GPU to the system memory buffer.
+
+	md3dImmediateContext->CopyResource(mOutputDebugBuffer, outputBuffer);
+
+	// Map the system memory buffer to read the results.
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	HR(md3dImmediateContext->Map(mOutputDebugBuffer, 0, D3D11_MAP_READ, 0, &mappedResource));
+
+	// Write the results to a file.
+
+	std::ofstream fout("output.txt");
+
+	float* data = reinterpret_cast<float*>(mappedResource.pData);
+	for(UINT i = 0; i < 64; ++i)
+	{
+		fout << data[i] << std::endl;
+	}
+
+	fout.close();
+
+	// Unmap the system memory buffer.
+	md3dImmediateContext->Unmap(mOutputDebugBuffer, 0);
+
+}
+
 bool BlurApp::Init()
 {
 	if(!D3DApp::Init())
@@ -244,6 +372,8 @@ bool BlurApp::Init()
 	BuildCrateGeometryBuffers();
 	BuildScreenQuadGeometryBuffers();
 	BuildOffscreenViews();
+
+	DoExercise1();
 
 	return true;
 }

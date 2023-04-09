@@ -95,20 +95,36 @@ BlurEffect::~BlurEffect()
 }
 #pragma endregion
 
+VectorEffect::VectorEffect(ID3D11Device* device, const std::wstring& filename)
+	: Effect(device, filename)
+{
+	tech = mFX->GetTechniqueByName("Tech");
+
+	input    = mFX->GetVariableByName("gInput")->AsShaderResource();
+	output   = mFX->GetVariableByName("gOutput")->AsUnorderedAccessView();
+}
+
+VectorEffect::~VectorEffect()
+{
+}
+
 #pragma region Effects
 
 BasicEffect*      Effects::BasicFX      = 0;
 BlurEffect*       Effects::BlurFX       = 0;
+VectorEffect*     Effects::VectorFX       = 0;
 
 void Effects::InitAll(ID3D11Device* device)
 {
 	BasicFX = new BasicEffect(device, L"FX/Basic.fxo");
 	BlurFX  = new BlurEffect(device, L"FX/Blur.fxo");
+	VectorFX  = new VectorEffect(device, L"FX/Vector.fxo");
 }
 
 void Effects::DestroyAll()
 {
 	SafeDelete(BasicFX);
 	SafeDelete(BlurFX);
+	SafeDelete(VectorFX);
 }
 #pragma endregion
