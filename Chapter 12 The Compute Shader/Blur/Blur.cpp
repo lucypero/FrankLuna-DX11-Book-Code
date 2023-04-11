@@ -339,6 +339,14 @@ void BlurApp::DoExercise1() {
 	// Unmap the system memory buffer.
 	md3dImmediateContext->Unmap(mOutputDebugBuffer, 0);
 
+	// delete the file
+
+
+	ReleaseCOM(inputBuffer);
+	ReleaseCOM(inputBufferSRV);
+	ReleaseCOM(outputBuffer);
+	ReleaseCOM(outputBufferUAV);
+	ReleaseCOM(mOutputDebugBuffer);
 }
 
 bool BlurApp::Init()
