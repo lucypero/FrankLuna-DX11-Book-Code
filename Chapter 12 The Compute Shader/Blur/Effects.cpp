@@ -100,7 +100,7 @@ VectorEffect::VectorEffect(ID3D11Device* device, const std::wstring& filename)
 {
 	tech = mFX->GetTechniqueByName("Tech");
 
-	input    = mFX->GetVariableByName("gInput")->AsShaderResource();
+	input    = mFX->GetVariableByName("gInput")->AsUnorderedAccessView();
 	output   = mFX->GetVariableByName("gOutput")->AsUnorderedAccessView();
 }
 

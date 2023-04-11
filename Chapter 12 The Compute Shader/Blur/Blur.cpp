@@ -238,9 +238,9 @@ void BlurApp::DoExercise1() {
 
 	// Create the input buffer
 	D3D11_BUFFER_DESC inputBufferDesc;
-	inputBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	inputBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	inputBufferDesc.ByteWidth = sizeof(XMFLOAT3) * 64;
-	inputBufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	inputBufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
 	inputBufferDesc.CPUAccessFlags = 0;
 	inputBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	inputBufferDesc.StructureByteStride = sizeof(XMFLOAT3);
@@ -254,15 +254,17 @@ void BlurApp::DoExercise1() {
 	HR(md3dDevice->CreateBuffer(&inputBufferDesc, &inputBufferData, &inputBuffer));
 
 	// Create the input buffer SRV
-	D3D11_SHADER_RESOURCE_VIEW_DESC inputBufferSRVDesc;
-	inputBufferSRVDesc.Format = DXGI_FORMAT_UNKNOWN;
-	inputBufferSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
 
-	inputBufferSRVDesc.Buffer.ElementOffset = 0;
-	inputBufferSRVDesc.Buffer.ElementWidth = 64;
+	// Create a UAV for a consumestructuredbuffer
+	D3D11_UNORDERED_ACCESS_VIEW_DESC inputUAVDesc = {};
+	inputUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	inputUAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	inputUAVDesc.Buffer.FirstElement = 0;
+	inputUAVDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_APPEND;
+	inputUAVDesc.Buffer.NumElements = 64;
 
-	ID3D11ShaderResourceView* inputBufferSRV;
-	HR(md3dDevice->CreateShaderResourceView(inputBuffer, &inputBufferSRVDesc, &inputBufferSRV));
+	ID3D11UnorderedAccessView* inputBufferUAV;
+	HR(md3dDevice->CreateUnorderedAccessView(inputBuffer, &inputUAVDesc, &inputBufferUAV));
 
 	// create output buffer and UAV
 
@@ -280,6 +282,7 @@ void BlurApp::DoExercise1() {
 	outputBufferUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
 	outputBufferUAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
 	outputBufferUAVDesc.Buffer.FirstElement = 0;
+	outputBufferUAVDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_APPEND;
 	outputBufferUAVDesc.Buffer.NumElements = 64;
 
 	ID3D11UnorderedAccessView* outputBufferUAV;
@@ -288,10 +291,15 @@ void BlurApp::DoExercise1() {
 	// here you bind the input buffer SRV and output buffer UAV to the compute shader
 
 	// Bind the input buffer SRV to the compute shader
-	md3dImmediateContext->CSSetShaderResources(0, 1, &inputBufferSRV);
+	ID3D11UnorderedAccessView* uavs[2] = { inputBufferUAV, outputBufferUAV };
+
+	UINT offsets[1] = {64u};
+	md3dImmediateContext->CSSetUnorderedAccessViews(0, 1, &inputBufferUAV, offsets);
+
+	// md3dImmediateContext->CSSetUnorderedAccessViews(0, 2, uavs, 0);
 
 
-	Effects::VectorFX->SetInput(inputBufferSRV);
+	Effects::VectorFX->SetInput(inputBufferUAV);
 	Effects::VectorFX->SetOutput(outputBufferUAV);
 	Effects::VectorFX->tech->GetPassByIndex(0)->Apply(0, md3dImmediateContext);
 
@@ -299,13 +307,10 @@ void BlurApp::DoExercise1() {
 
 	// unbind the input buffer SRV and output buffer UAV from the compute shader
 
-	// Unbind the input buffer SRV from the compute shader
-	ID3D11ShaderResourceView* nullSRV[1] = { 0 };
-	md3dImmediateContext->CSSetShaderResources(0, 1, nullSRV);
 
 	// Unbind the output buffer UAV from the compute shader
-	ID3D11UnorderedAccessView* nullUAV[1] = { 0 };
-	md3dImmediateContext->CSSetUnorderedAccessViews(0, 1, nullUAV, 0);
+	ID3D11UnorderedAccessView* nullUAV[2] = { 0, 0 };
+	md3dImmediateContext->CSSetUnorderedAccessViews(0, 2, nullUAV, 0);
 
 	// Create a system memory version of the buffer to read the
 	// results back from.
@@ -341,11 +346,8 @@ void BlurApp::DoExercise1() {
 	// Unmap the system memory buffer.
 	md3dImmediateContext->Unmap(mOutputDebugBuffer, 0);
 
-	// delete the file
-
-
 	ReleaseCOM(inputBuffer);
-	ReleaseCOM(inputBufferSRV);
+	ReleaseCOM(inputBufferUAV);
 	ReleaseCOM(outputBuffer);
 	ReleaseCOM(outputBufferUAV);
 	ReleaseCOM(mOutputDebugBuffer);

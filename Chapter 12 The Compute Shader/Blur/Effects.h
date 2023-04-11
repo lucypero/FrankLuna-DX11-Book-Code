@@ -115,12 +115,12 @@ struct VectorEffect : public Effect
 	VectorEffect(ID3D11Device* device, const std::wstring& filename);
 	~VectorEffect();
 
-	void SetInput(ID3D11ShaderResourceView* in) { input->SetResource(in); }
+	void SetInput(ID3D11UnorderedAccessView* in) { input->SetUnorderedAccessView(in); }
 	void SetOutput(ID3D11UnorderedAccessView* p_output) { output->SetUnorderedAccessView(p_output); }
 
 	ID3DX11EffectTechnique* tech;
 
-	ID3DX11EffectShaderResourceVariable* input;
+	ID3DX11EffectUnorderedAccessViewVariable* input;
 	ID3DX11EffectUnorderedAccessViewVariable* output;
 };
 
