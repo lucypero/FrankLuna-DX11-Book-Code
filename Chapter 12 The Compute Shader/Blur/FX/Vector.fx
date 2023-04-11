@@ -1,8 +1,8 @@
 // structured buffer which is an array of 3d vectors
-StructuredBuffer<float3> gInput;
+Buffer<float3> gInput;
 
 // Output float buffer to store the computed lengths
-RWStructuredBuffer<float> gOutput;
+Buffer<float> gOutput;
 
 [numthreads(64, 1, 1)]
 void CS(int3 dtid : SV_DispatchThreadID)

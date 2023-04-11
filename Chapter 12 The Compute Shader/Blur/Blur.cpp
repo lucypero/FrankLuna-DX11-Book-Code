@@ -232,6 +232,8 @@ void BlurApp::DoExercise1() {
         comp_input[i].x = magnitude * std::sin(phi) * std::cos(theta);
         comp_input[i].y = magnitude * std::sin(phi) * std::sin(theta);
         comp_input[i].z = magnitude * std::cos(phi);
+
+		log("magnitude is %f", magnitude);
 	}
 
 	// Create the input buffer
