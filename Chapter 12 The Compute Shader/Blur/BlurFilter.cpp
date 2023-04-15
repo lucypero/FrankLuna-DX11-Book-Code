@@ -107,6 +107,10 @@ void BlurFilter::BlurInPlace(ID3D11DeviceContext* dc,
 	// Run the compute shader to blur the offscreen texture.
 	// 
 
+		// Unbind the input texture from the CS for good housekeeping.
+		ID3D11ShaderResourceView* nullSRV[1] = { 0 };
+		ID3D11UnorderedAccessView* nullUAV[1] = { 0 };
+
 	for(int i = 0; i < blurCount; ++i)
 	{
 		// HORIZONTAL blur pass.
@@ -124,13 +128,10 @@ void BlurFilter::BlurInPlace(ID3D11DeviceContext* dc,
 			dc->Dispatch(numGroupsX, mHeight, 1);
 		}
 	
-		// Unbind the input texture from the CS for good housekeeping.
-		ID3D11ShaderResourceView* nullSRV[1] = { 0 };
 		dc->CSSetShaderResources( 0, 1, nullSRV );
 
 		// Unbind output from compute shader (we are going to use this output as an input in the next pass, 
 		// and a resource cannot be both an output and input at the same time.
-		ID3D11UnorderedAccessView* nullUAV[1] = { 0 };
 		dc->CSSetUnorderedAccessViews( 0, 1, nullUAV, 0 );
 	
 		// VERTICAL blur pass.
@@ -147,6 +148,30 @@ void BlurFilter::BlurInPlace(ID3D11DeviceContext* dc,
 			dc->Dispatch(mWidth, numGroupsY, 1);
 		}
 	
+		dc->CSSetShaderResources( 0, 1, nullSRV );
+		dc->CSSetUnorderedAccessViews( 0, 1, nullUAV, 0 );
+	}
+
+	if( blurCount == 0 ) {
+		// If we are not blurring, then we need to copy the input to the output.
+
+		// now the blurred result is in mBlurredOutputTexSRV, so copy it to inputUAV
+		// so it can be shown on the screen.
+
+		// Copy blurred output to input.
+
+		// u gotta write what's in blurredoutput to inputuav
+
+		Effects::BlurFX->SetInputMap(inputSRV);
+		Effects::BlurFX->SetOutputMap(mBlurredOutputTexUAV);
+		Effects::BlurFX->CopyTech->GetPassByIndex(0)->Apply(0, dc);
+
+		// How many groups do we need to dispatch to cover a row of pixels, where each
+		// group covers 256 pixels (the 256 is defined in the ComputeShader).
+		UINT numGroupsX = (UINT)ceilf(mWidth / 16.0f);
+		UINT numGroupsY = (UINT)ceilf(mHeight / 16.0f);
+		dc->Dispatch(numGroupsX, numGroupsY, 1);
+
 		dc->CSSetShaderResources( 0, 1, nullSRV );
 		dc->CSSetUnorderedAccessViews( 0, 1, nullUAV, 0 );
 	}

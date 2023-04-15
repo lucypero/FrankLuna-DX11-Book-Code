@@ -103,6 +103,7 @@ public:
 
 	ID3DX11EffectTechnique* HorzBlurTech;
 	ID3DX11EffectTechnique* VertBlurTech;
+	ID3DX11EffectTechnique* CopyTech;
 
 	ID3DX11EffectScalarVariable* Weights;
 	ID3DX11EffectShaderResourceVariable* InputMap;
