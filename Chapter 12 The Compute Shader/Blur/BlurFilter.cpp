@@ -41,12 +41,6 @@ void BlurFilter::SetGaussianWeights(float sigma)
 		weights[i] /= sum;
 	}
 
-	Effects::BlurFX->SetWeights(weights);
-}
-
-void BlurFilter::SetWeights(const float weights[9])
-{
-	Effects::BlurFX->SetWeights(weights);
 }
 
 void BlurFilter::Init(ID3D11Device* device, UINT width, UINT height, DXGI_FORMAT format)
@@ -111,42 +105,49 @@ void BlurFilter::BlurInPlace(ID3D11DeviceContext* dc,
 	{
 		// HORIZONTAL blur pass.
 		D3DX11_TECHNIQUE_DESC techDesc;
-		Effects::BlurFX->HorzBlurTech->GetDesc( &techDesc );
+		Effects::BlurFX->BlurTech->GetDesc( &techDesc );
 		for(UINT p = 0; p < techDesc.Passes; ++p)
 		{
 			Effects::BlurFX->SetInputMap(inputSRV);
 			Effects::BlurFX->SetOutputMap(mBlurredOutputTexUAV);
-			Effects::BlurFX->HorzBlurTech->GetPassByIndex(p)->Apply(0, dc);
+			Effects::BlurFX->BlurTech->GetPassByIndex(p)->Apply(0, dc);
 
 			// How many groups do we need to dispatch to cover a row of pixels, where each
 			// group covers 256 pixels (the 256 is defined in the ComputeShader).
-			UINT numGroupsX = (UINT)ceilf(mWidth / 256.0f);
-			dc->Dispatch(numGroupsX, mHeight, 1);
+			UINT numGroupsX = (UINT)ceilf(mWidth / 16.0f);
+			UINT numGroupsY = (UINT)ceilf(mHeight / 16.0f);
+			dc->Dispatch(numGroupsX, numGroupsY, 1);
 		}
 	
 		// Unbind the input texture from the CS for good housekeeping.
 		ID3D11ShaderResourceView* nullSRV[1] = { 0 };
 		dc->CSSetShaderResources( 0, 1, nullSRV );
 
-		// Unbind output from compute shader (we are going to use this output as an input in the next pass, 
-		// and a resource cannot be both an output and input at the same time.
+		// Unbind output from compute shader 
 		ID3D11UnorderedAccessView* nullUAV[1] = { 0 };
 		dc->CSSetUnorderedAccessViews( 0, 1, nullUAV, 0 );
-	
-		// VERTICAL blur pass.
-		Effects::BlurFX->VertBlurTech->GetDesc( &techDesc );
+
+		// now the blurred result is in mBlurredOutputTexSRV, so copy it to inputUAV
+		// so it can be shown on the screen.
+
+		// Copy blurred output to input.
+
+		// u gotta write what's in blurredoutput to inputuav
+
+		Effects::BlurFX->CopyTech->GetDesc( &techDesc );
 		for(UINT p = 0; p < techDesc.Passes; ++p)
 		{
 			Effects::BlurFX->SetInputMap(mBlurredOutputTexSRV);
 			Effects::BlurFX->SetOutputMap(inputUAV);
-			Effects::BlurFX->VertBlurTech->GetPassByIndex(p)->Apply(0, dc);
+			Effects::BlurFX->CopyTech->GetPassByIndex(p)->Apply(0, dc);
 
-			// How many groups do we need to dispatch to cover a column of pixels, where each
-			// group covers 256 pixels  (the 256 is defined in the ComputeShader).
-			UINT numGroupsY = (UINT)ceilf(mHeight / 256.0f);
-			dc->Dispatch(mWidth, numGroupsY, 1);
+			// How many groups do we need to dispatch to cover a row of pixels, where each
+			// group covers 256 pixels (the 256 is defined in the ComputeShader).
+			UINT numGroupsX = (UINT)ceilf(mWidth / 16.0f);
+			UINT numGroupsY = (UINT)ceilf(mHeight / 16.0f);
+			dc->Dispatch(numGroupsX, numGroupsY, 1);
 		}
-	
+
 		dc->CSSetShaderResources( 0, 1, nullSRV );
 		dc->CSSetUnorderedAccessViews( 0, 1, nullUAV, 0 );
 	}

@@ -97,14 +97,12 @@ public:
 	BlurEffect(ID3D11Device* device, const std::wstring& filename);
 	~BlurEffect();
 
-	void SetWeights(const float weights[9])           { Weights->SetFloatArray(weights, 0, 9); }
 	void SetInputMap(ID3D11ShaderResourceView* tex)   { InputMap->SetResource(tex); }
 	void SetOutputMap(ID3D11UnorderedAccessView* tex) { OutputMap->SetUnorderedAccessView(tex); }
 
-	ID3DX11EffectTechnique* HorzBlurTech;
-	ID3DX11EffectTechnique* VertBlurTech;
+	ID3DX11EffectTechnique* BlurTech;
+	ID3DX11EffectTechnique* CopyTech;
 
-	ID3DX11EffectScalarVariable* Weights;
 	ID3DX11EffectShaderResourceVariable* InputMap;
 	ID3DX11EffectUnorderedAccessViewVariable* OutputMap;
 };

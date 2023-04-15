@@ -82,12 +82,11 @@ BasicEffect::~BasicEffect()
 BlurEffect::BlurEffect(ID3D11Device* device, const std::wstring& filename)
 	: Effect(device, filename)
 {
-	HorzBlurTech = mFX->GetTechniqueByName("HorzBlur");
-	VertBlurTech = mFX->GetTechniqueByName("VertBlur");
+	BlurTech = mFX->GetTechniqueByName("BilateralBlur");
+	CopyTech = mFX->GetTechniqueByName("Copy");
 
-	Weights     = mFX->GetVariableByName("gWeights")->AsScalar();
-	InputMap    = mFX->GetVariableByName("gInput")->AsShaderResource();
-	OutputMap   = mFX->GetVariableByName("gOutput")->AsUnorderedAccessView();
+	InputMap    = mFX->GetVariableByName("inputTexture")->AsShaderResource();
+	OutputMap   = mFX->GetVariableByName("outputTexture")->AsUnorderedAccessView();
 }
 
 BlurEffect::~BlurEffect()
