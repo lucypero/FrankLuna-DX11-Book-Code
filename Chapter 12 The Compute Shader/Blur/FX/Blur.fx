@@ -140,3 +140,22 @@ technique11 VertBlur
 		SetComputeShader( CompileShader( cs_5_0, VertBlurCS() ) );
     }
 }
+
+[numthreads(16, 16, 1)]
+void CopyCS(int3 groupThreadID : SV_GroupThreadID,
+				int3 dispatchThreadID : SV_DispatchThreadID)
+{   
+    // Read from the SRV and write to the UAV
+    float4 srcData = gInput[dispatchThreadID.xy]; // Load data from SRV
+    gOutput[dispatchThreadID.xy] = srcData; // Write data to UAV
+}
+
+technique11 Copy
+{
+    pass P0
+    {
+		SetVertexShader( NULL );
+        SetPixelShader( NULL );
+		SetComputeShader( CompileShader( cs_5_0, CopyCS() ) );
+    }
+}

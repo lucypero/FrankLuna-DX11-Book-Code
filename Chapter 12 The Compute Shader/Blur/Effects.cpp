@@ -84,6 +84,7 @@ BlurEffect::BlurEffect(ID3D11Device* device, const std::wstring& filename)
 {
 	HorzBlurTech = mFX->GetTechniqueByName("HorzBlur");
 	VertBlurTech = mFX->GetTechniqueByName("VertBlur");
+	CopyTech = mFX->GetTechniqueByName("Copy");
 
 	Weights     = mFX->GetVariableByName("gWeights")->AsScalar();
 	InputMap    = mFX->GetVariableByName("gInput")->AsShaderResource();

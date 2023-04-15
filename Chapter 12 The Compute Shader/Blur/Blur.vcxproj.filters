@@ -129,5 +129,8 @@
     <CustomBuild Include="FX\Blur.fx">
       <Filter>FX</Filter>
     </CustomBuild>
+    <CustomBuild Include="FX\Waves.fx">
+      <Filter>FX</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

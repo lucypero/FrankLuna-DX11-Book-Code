@@ -33,6 +33,11 @@ enum RenderOptions
 	TexturesAndFog = 2
 };
 
+namespace {
+	const u32 mWavesVertexCountX = 200;
+	const u32 mWavesVertexCountZ = 200;
+}
+
 class BlurApp : public D3DApp
 {
 public:
@@ -98,7 +103,7 @@ private:
 	XMFLOAT4X4 mView;
 	XMFLOAT4X4 mProj;
 
-	int mBlurCount = 4;
+	int mBlurCount = 0;
 
 	UINT mLandIndexCount;
 	UINT mWaveIndexCount;
@@ -237,7 +242,7 @@ bool BlurApp::Init()
 		L"Textures/WireFence.dds", &texResource, &mCrateSRV));
 	ReleaseCOM(texResource);
 
-	mWaves.Init(160, 160, 1.0f, 0.03f, 5.0f, 0.3f);
+	mWaves.Init(mWavesVertexCountX, mWavesVertexCountZ, 1.0f, 0.03f, 5.0f, 0.3f);
 
 	BuildLandGeometryBuffers();
 	BuildWaveGeometryBuffers();
@@ -380,8 +385,7 @@ void BlurApp::DrawScene()
 	md3dImmediateContext->OMSetRenderTargets(1, renderTargets, mDepthStencilView);
 
 	//mBlur.SetGaussianWeights(4.0f);
-	if (mBlurCount > 0)
-		mBlur.BlurInPlace(md3dImmediateContext, mOffscreenSRV, mOffscreenUAV, mBlurCount);
+	mBlur.BlurInPlace(md3dImmediateContext, mOffscreenSRV, mOffscreenUAV, mBlurCount);
 
 	//
 	// Draw fullscreen quad with texture of blurred scene on it.
