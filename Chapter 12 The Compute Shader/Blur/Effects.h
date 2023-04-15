@@ -46,6 +46,11 @@ public:
 	void SetDirLights(const DirectionalLight* lights)   { DirLights->SetRawValue(lights, 0, 3*sizeof(DirectionalLight)); }
 	void SetMaterial(const Material& mat)               { Mat->SetRawValue(&mat, 0, sizeof(Material)); }
 	void SetDiffuseMap(ID3D11ShaderResourceView* tex)   { DiffuseMap->SetResource(tex); }
+	void SetDisplacementMap(ID3D11ShaderResourceView* tex)   { DisplacementMap->SetResource(tex); }
+
+
+	void SetWaveIndexCountX(int mWavesVertexCountX) { WaveIndexCountX->SetInt(mWavesVertexCountX); }
+	void SetWaveIndexCountZ(int mWavesVertexCountZ) { WaveIndexCountZ->SetInt(mWavesVertexCountZ); }
 
 	ID3DX11EffectTechnique* Light1Tech;
 	ID3DX11EffectTechnique* Light2Tech;
@@ -75,6 +80,8 @@ public:
 	ID3DX11EffectTechnique* Light2TexAlphaClipFogTech;
 	ID3DX11EffectTechnique* Light3TexAlphaClipFogTech;
 
+	ID3DX11EffectTechnique* WavesTech;
+
 	ID3DX11EffectMatrixVariable* WorldViewProj;
 	ID3DX11EffectMatrixVariable* World;
 	ID3DX11EffectMatrixVariable* WorldInvTranspose;
@@ -86,7 +93,11 @@ public:
 	ID3DX11EffectVariable* DirLights;
 	ID3DX11EffectVariable* Mat;
 
+	ID3DX11EffectScalarVariable* WaveIndexCountX;
+	ID3DX11EffectScalarVariable* WaveIndexCountZ;
+
 	ID3DX11EffectShaderResourceVariable* DiffuseMap;
+	ID3DX11EffectShaderResourceVariable* DisplacementMap;
 };
 #pragma endregion
 
@@ -111,6 +122,37 @@ public:
 };
 #pragma endregion
 
+// Compute shader that computes the displacement map each frame
+class WaveEffect : public Effect
+{
+public:
+	WaveEffect(ID3D11Device* device, const std::wstring& filename);
+	~WaveEffect();
+
+	void SetPrevSolInput(ID3D11ShaderResourceView* tex)   { PrevSolInput->SetResource(tex); }
+	void SetCurSolInput(ID3D11ShaderResourceView* tex)   { CurSolInput->SetResource(tex); }
+
+	void SetCurSolOutput(ID3D11UnorderedAccessView* tex) { CurSolOutput->SetUnorderedAccessView(tex); }
+	void SetNextSolOutput(ID3D11UnorderedAccessView* tex) { NextSolOutput->SetUnorderedAccessView(tex); }
+
+	void SetWaveIndexCountX(int mWavesVertexCountX) { WaveIndexCountX->SetInt(mWavesVertexCountX); }
+	void SetWaveIndexCountZ(int mWavesVertexCountZ) { WaveIndexCountZ->SetInt(mWavesVertexCountZ); }
+	void SetDT(float dt) { Dt->SetFloat(dt); }
+
+
+	ID3DX11EffectScalarVariable* WaveIndexCountX;
+	ID3DX11EffectScalarVariable* WaveIndexCountZ;
+	ID3DX11EffectScalarVariable* Dt;
+
+	ID3DX11EffectTechnique* WaveUpdateTech;
+
+	ID3DX11EffectShaderResourceVariable* PrevSolInput;
+	ID3DX11EffectShaderResourceVariable* CurSolInput;
+
+	ID3DX11EffectUnorderedAccessViewVariable* CurSolOutput;
+	ID3DX11EffectUnorderedAccessViewVariable* NextSolOutput;
+};
+
 #pragma region Effects
 class Effects
 {
@@ -120,6 +162,7 @@ public:
 
 	static BasicEffect* BasicFX;
 	static BlurEffect* BlurFX;
+	static WaveEffect* WaveFX;
 };
 #pragma endregion
 

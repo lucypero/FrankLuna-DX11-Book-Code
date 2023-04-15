@@ -155,19 +155,10 @@ void BlurFilter::BlurInPlace(ID3D11DeviceContext* dc,
 	if( blurCount == 0 ) {
 		// If we are not blurring, then we need to copy the input to the output.
 
-		// now the blurred result is in mBlurredOutputTexSRV, so copy it to inputUAV
-		// so it can be shown on the screen.
-
-		// Copy blurred output to input.
-
-		// u gotta write what's in blurredoutput to inputuav
-
 		Effects::BlurFX->SetInputMap(inputSRV);
 		Effects::BlurFX->SetOutputMap(mBlurredOutputTexUAV);
 		Effects::BlurFX->CopyTech->GetPassByIndex(0)->Apply(0, dc);
 
-		// How many groups do we need to dispatch to cover a row of pixels, where each
-		// group covers 256 pixels (the 256 is defined in the ComputeShader).
 		UINT numGroupsX = (UINT)ceilf(mWidth / 16.0f);
 		UINT numGroupsY = (UINT)ceilf(mHeight / 16.0f);
 		dc->Dispatch(numGroupsX, numGroupsY, 1);

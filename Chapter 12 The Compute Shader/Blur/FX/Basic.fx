@@ -14,6 +14,9 @@ cbuffer cbPerFrame
 	float  gFogStart;
 	float  gFogRange;
 	float4 gFogColor;
+
+    uint WavesIndexCountX;
+    uint WavesIndexCountZ;
 };
 
 cbuffer cbPerObject
@@ -28,10 +31,21 @@ cbuffer cbPerObject
 // Nonnumeric values cannot be added to a cbuffer.
 Texture2D gDiffuseMap;
 
+Texture2D<float> gDisplacementMap;
+
 SamplerState samAnisotropic
 {
 	Filter = ANISOTROPIC;
 	MaxAnisotropy = 4;
+
+	AddressU = WRAP;
+	AddressV = WRAP;
+};
+
+SamplerState samDisplacement
+{
+    // nearest neighbor filtering
+    Filter = MIN_MAG_MIP_POINT;
 
 	AddressU = WRAP;
 	AddressV = WRAP;
@@ -51,6 +65,28 @@ struct VertexOut
     float3 NormalW : NORMAL;
 	float2 Tex     : TEXCOORD;
 };
+
+VertexOut WavesVS(VertexIn vin, uint vertexID : SV_VertexID)
+{
+	VertexOut vout;
+
+    // here you gotta sample the wave texture
+    vin.PosL.y = gDisplacementMap.SampleLevel(samDisplacement, vin.Tex, 0) * 5.0f;
+
+    // TODO: gotta calculate the normal (no idea how to do that)
+	
+	// Transform to world space space.
+	vout.PosW    = mul(float4(vin.PosL, 1.0f), gWorld).xyz;
+	vout.NormalW = mul(vin.NormalL, (float3x3)gWorldInvTranspose);
+		
+	// Transform to homogeneous clip space.
+	vout.PosH = mul(float4(vin.PosL, 1.0f), gWorldViewProj);
+	
+	// Output vertex attributes for interpolation across triangle.
+	vout.Tex = mul(float4(vin.Tex, 0.0f, 1.0f), gTexTransform).xy;
+
+	return vout;
+}
 
 VertexOut VS(VertexIn vin)
 {
@@ -363,5 +399,15 @@ technique11 Light3TexAlphaClipFog
         SetVertexShader( CompileShader( vs_5_0, VS() ) );
 		SetGeometryShader( NULL );
         SetPixelShader( CompileShader( ps_5_0, PS(3, true, true, true) ) );
+    }
+}
+
+technique11 Waves
+{
+    pass P0
+    {
+        SetVertexShader( CompileShader( vs_5_0, WavesVS() ) );
+		SetGeometryShader( NULL );
+        SetPixelShader( CompileShader( ps_5_0, PS(3, true, false, false) ) );
     }
 }

@@ -50,6 +50,8 @@ BasicEffect::BasicEffect(ID3D11Device* device, const std::wstring& filename)
 	Light2FogTech    = mFX->GetTechniqueByName("Light2Fog");
 	Light3FogTech    = mFX->GetTechniqueByName("Light3Fog");
 
+	WavesTech    = mFX->GetTechniqueByName("Waves");
+
 	Light0TexFogTech = mFX->GetTechniqueByName("Light0TexFog");
 	Light1TexFogTech = mFX->GetTechniqueByName("Light1TexFog");
 	Light2TexFogTech = mFX->GetTechniqueByName("Light2TexFog");
@@ -71,6 +73,10 @@ BasicEffect::BasicEffect(ID3D11Device* device, const std::wstring& filename)
 	DirLights         = mFX->GetVariableByName("gDirLights");
 	Mat               = mFX->GetVariableByName("gMaterial");
 	DiffuseMap        = mFX->GetVariableByName("gDiffuseMap")->AsShaderResource();
+	DisplacementMap   = mFX->GetVariableByName("gDisplacementMap")->AsShaderResource();
+
+	WaveIndexCountX          = mFX->GetVariableByName("WavesIndexCountX")->AsScalar();
+	WaveIndexCountZ          = mFX->GetVariableByName("WavesIndexCountZ")->AsScalar();
 }
 
 BasicEffect::~BasicEffect()
@@ -96,20 +102,44 @@ BlurEffect::~BlurEffect()
 }
 #pragma endregion
 
+
+WaveEffect::WaveEffect(ID3D11Device* device, const std::wstring& filename)
+	: Effect(device, filename)
+{
+	WaveUpdateTech = mFX->GetTechniqueByName("WaveUpdate");
+
+	PrevSolInput    = mFX->GetVariableByName("gPrevSolInput")->AsShaderResource();
+	CurSolInput    = mFX->GetVariableByName("gCurrSolInput")->AsShaderResource();
+
+	CurSolOutput   = mFX->GetVariableByName("gCurrSolOutput")->AsUnorderedAccessView();
+	NextSolOutput   = mFX->GetVariableByName("gNextSolOutput")->AsUnorderedAccessView();
+
+	WaveIndexCountX = mFX->GetVariableByName("WavesIndexCountX")->AsScalar();
+	WaveIndexCountZ = mFX->GetVariableByName("WavesIndexCountZ")->AsScalar();
+	Dt = mFX->GetVariableByName("dt")->AsScalar();
+}
+
+WaveEffect::~WaveEffect()
+{
+}
+
 #pragma region Effects
 
 BasicEffect*      Effects::BasicFX      = 0;
 BlurEffect*       Effects::BlurFX       = 0;
+WaveEffect*       Effects::WaveFX       = 0;
 
 void Effects::InitAll(ID3D11Device* device)
 {
 	BasicFX = new BasicEffect(device, L"FX/Basic.fxo");
 	BlurFX  = new BlurEffect(device, L"FX/Blur.fxo");
+	WaveFX  = new WaveEffect(device, L"FX/Waves.fxo");
 }
 
 void Effects::DestroyAll()
 {
 	SafeDelete(BasicFX);
 	SafeDelete(BlurFX);
+	SafeDelete(WaveFX);
 }
 #pragma endregion
