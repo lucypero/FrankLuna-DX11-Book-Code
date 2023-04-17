@@ -70,6 +70,11 @@ void Waves::Init(UINT m, UINT n, float dx, float dt, float speed, float damping)
 	mK2     = (4.0f-8.0f*e) / d;
 	mK3     = (2.0f*e) / d;
 
+	// log mk
+	// log("mK1: %f", mK1);
+	// log("mK2: %f", mK2);
+	// log("mK3: %f", mK3);
+
 	// In case Init() called again.
 	delete[] mPrevSolution;
 	delete[] mCurrSolution;

@@ -107,6 +107,7 @@ WaveEffect::WaveEffect(ID3D11Device* device, const std::wstring& filename)
 	: Effect(device, filename)
 {
 	WaveUpdateTech = mFX->GetTechniqueByName("WaveUpdate");
+	WaveDisturbTech = mFX->GetTechniqueByName("WaveDisturb");
 
 	PrevSolInput    = mFX->GetVariableByName("gPrevSolInput")->AsShaderResource();
 	CurSolInput    = mFX->GetVariableByName("gCurrSolInput")->AsShaderResource();
@@ -117,6 +118,10 @@ WaveEffect::WaveEffect(ID3D11Device* device, const std::wstring& filename)
 	WaveIndexCountX = mFX->GetVariableByName("WavesIndexCountX")->AsScalar();
 	WaveIndexCountZ = mFX->GetVariableByName("WavesIndexCountZ")->AsScalar();
 	Dt = mFX->GetVariableByName("dt")->AsScalar();
+	magnitude = mFX->GetVariableByName("magnitude")->AsScalar();
+
+	disturbPosX = mFX->GetVariableByName("disturbPosX")->AsScalar();
+	disturbPosY = mFX->GetVariableByName("disturbPosY")->AsScalar();
 }
 
 WaveEffect::~WaveEffect()

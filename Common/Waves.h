@@ -11,6 +11,7 @@
 
 #include <Windows.h>
 #include <DirectXMath.h>
+#include "utils.h"
 
 class Waves
 {

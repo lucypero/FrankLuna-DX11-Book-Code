@@ -137,14 +137,22 @@ public:
 
 	void SetWaveIndexCountX(int mWavesVertexCountX) { WaveIndexCountX->SetInt(mWavesVertexCountX); }
 	void SetWaveIndexCountZ(int mWavesVertexCountZ) { WaveIndexCountZ->SetInt(mWavesVertexCountZ); }
-	void SetDT(float dt) { Dt->SetFloat(dt); }
 
+	void SetDisturbPos(int x, int y) { disturbPosX->SetInt(x); disturbPosY->SetInt(y); }
+
+	void SetDT(float dt) { Dt->SetFloat(dt); }
+	void SetMagnitude(float m) { magnitude->SetFloat(m); }
 
 	ID3DX11EffectScalarVariable* WaveIndexCountX;
 	ID3DX11EffectScalarVariable* WaveIndexCountZ;
 	ID3DX11EffectScalarVariable* Dt;
+	ID3DX11EffectScalarVariable* magnitude;
+
+	ID3DX11EffectScalarVariable* disturbPosX;
+	ID3DX11EffectScalarVariable* disturbPosY;
 
 	ID3DX11EffectTechnique* WaveUpdateTech;
+	ID3DX11EffectTechnique* WaveDisturbTech;
 
 	ID3DX11EffectShaderResourceVariable* PrevSolInput;
 	ID3DX11EffectShaderResourceVariable* CurSolInput;

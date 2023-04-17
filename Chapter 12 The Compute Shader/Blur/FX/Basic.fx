@@ -71,7 +71,7 @@ VertexOut WavesVS(VertexIn vin, uint vertexID : SV_VertexID)
 	VertexOut vout;
 
     // here you gotta sample the wave texture
-    vin.PosL.y = gDisplacementMap.SampleLevel(samDisplacement, vin.Tex, 0) * 5.0f;
+    vin.PosL.y = gDisplacementMap.SampleLevel(samDisplacement, vin.Tex, 0) * 50.0f;
 
     // TODO: gotta calculate the normal (no idea how to do that)
 	

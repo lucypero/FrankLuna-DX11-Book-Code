@@ -380,9 +380,6 @@ void BlurApp::UpdateScene(float dt)
 	XMMATRIX V = XMMatrixLookAtLH(pos, target, up);
 	XMStoreFloat4x4(&mView, V);
 
-	//
-	// Every quarter second, generate a random wave.
-	//
 
 	// TODO (the disturb part is not done yet)
 
@@ -398,6 +395,38 @@ void BlurApp::UpdateScene(float dt)
 
 	md3dImmediateContext->Dispatch((mWavesVertexCountX + 15) / 16, (mWavesVertexCountZ + 15) / 16, 1);
 
+	//
+	// Every quarter second, generate a random wave.
+	//
+
+	static float t_base = 0.0f;
+	if ((mTimer.TotalTime() - t_base) >= 0.1f)
+	{
+		t_base += 0.1f;
+
+		DWORD i = 5 + rand() % (mWaves.RowCount() - 10);
+		DWORD j = 5 + rand() % (mWaves.ColumnCount() - 10);
+
+		float r = MathHelper::RandF(0.5f, 1.0f);
+
+		Effects::WaveFX->SetPrevSolInput(mWavePrevSolSRV);
+		Effects::WaveFX->SetCurSolOutput(mWaveCurSolUAV);
+		Effects::WaveFX->SetWaveIndexCountX(mWavesVertexCountX);
+		Effects::WaveFX->SetWaveIndexCountZ(mWavesVertexCountZ);
+		Effects::WaveFX->SetDT(dt);
+
+		Effects::WaveFX->SetMagnitude(r);
+		Effects::WaveFX->SetDisturbPos(i, j);
+
+		Effects::WaveFX->WaveDisturbTech->GetPassByIndex(0)->Apply(0, md3dImmediateContext);
+
+		log("dispatching disturb");
+
+		md3dImmediateContext->Dispatch((mWavesVertexCountX + 15) / 16, (mWavesVertexCountZ + 15) / 16, 1);
+
+		// mWaves.Disturb(i, j, r);
+	}
+
 	// Unbind everything from cs
 	ID3D11ShaderResourceView *nullSRV[1] = {0};
 	md3dImmediateContext->CSSetShaderResources(0, 1, nullSRV);
@@ -407,40 +436,14 @@ void BlurApp::UpdateScene(float dt)
 
 	md3dImmediateContext->CSSetShader(0, 0, 0);
 
-	// reading the compute output to stdout
-
-	if (first_time)
-	{
-		first_time = false;
-
-		ID3D11Resource *resource = nullptr;
-		mWaveCurSolUAV->GetResource(&resource);
-
-		md3dImmediateContext->CopyResource(mOutputDebugBuffer, resource);
-
-		// Map the system memory buffer to read the results.
-		D3D11_MAPPED_SUBRESOURCE mappedResource;
-		HR(md3dImmediateContext->Map(mOutputDebugBuffer, 0, D3D11_MAP_READ, 0, &mappedResource));
-
-		// Write the results to a file.
-
-		std::ofstream fout("output.txt");
-
-		float *data = reinterpret_cast<float *>(mappedResource.pData);
-		for (UINT i = 0; i < mWavesVertexCountX * mWavesVertexCountZ; ++i)
-		{
-			// a line break every mWaveVertexCountX floats
-			if (i % mWavesVertexCountX == 0 && i != 0)
-				fout << std::endl;
-
-			fout << data[i] << " ";
-		}
-
-		fout.close();
-
-		// Unmap the system memory buffer.
-		md3dImmediateContext->Unmap(mOutputDebugBuffer, 0);
-	}
+	// swap the buffers
+	ID3D11ShaderResourceView *tempSRV = mWavePrevSolSRV;
+	mWavePrevSolSRV = mWaveCurSolSRV;
+	mWaveCurSolSRV = tempSRV;
+	// swap the UAVs
+	ID3D11UnorderedAccessView *tempUAV = mWavePrevSolUAV;
+	mWavePrevSolUAV = mWaveCurSolUAV;
+	mWaveCurSolUAV = tempUAV;
 
 	// the following is all commented bc the compute shader will do all this
 
@@ -726,7 +729,7 @@ void BlurApp::DrawWrapper()
 	Effects::BasicFX->SetTexTransform(XMLoadFloat4x4(&mWaterTexTransform));
 	Effects::BasicFX->SetMaterial(mWavesMat);
 	Effects::BasicFX->SetDiffuseMap(mWavesMapSRV);
-	Effects::BasicFX->SetDisplacementMap(mWaveCurSolSRV);
+	Effects::BasicFX->SetDisplacementMap(mWavePrevSolSRV);
 
 	md3dImmediateContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
 	Effects::BasicFX->WavesTech->GetPassByIndex(0)->Apply(0, md3dImmediateContext);
