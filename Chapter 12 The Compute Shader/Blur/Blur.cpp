@@ -34,8 +34,8 @@ enum RenderOptions
 };
 
 namespace {
-	const u32 mWavesVertexCountX = 200;
-	const u32 mWavesVertexCountZ = 200;
+	const u32 mWavesVertexCountX = 160;
+	const u32 mWavesVertexCountZ = 160;
 }
 
 class BlurApp : public D3DApp
