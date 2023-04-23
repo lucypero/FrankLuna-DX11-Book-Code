@@ -35,8 +35,8 @@ enum RenderOptions
 
 namespace
 {
-	const u32 mWavesVertexCountX = 200;
-	const u32 mWavesVertexCountZ = 200;
+	const u32 mWavesVertexCountX = 512;
+	const u32 mWavesVertexCountZ = 512;
 }
 
 class BlurApp : public D3DApp
@@ -78,9 +78,11 @@ private:
 	// extra wave stuff for the compute shader
 	ID3D11ShaderResourceView *mWavePrevSolSRV;
 	ID3D11ShaderResourceView *mWaveCurSolSRV;
+	ID3D11ShaderResourceView *mWaveNextSolSRV;
 
 	ID3D11UnorderedAccessView *mWavePrevSolUAV;
 	ID3D11UnorderedAccessView *mWaveCurSolUAV;
+	ID3D11UnorderedAccessView *mWaveNextSolUAV;
 
 	ID3D11Texture2D *mOutputDebugBuffer;
 
@@ -100,6 +102,8 @@ private:
 
 	BlurFilter mBlur;
 	Waves mWaves;
+
+	float mWavesTimeStep = 0.03f;
 
 	DirectionalLight mDirLights[3];
 	Material mLandMat;
@@ -254,7 +258,7 @@ bool BlurApp::Init()
 										 L"Textures/WireFence.dds", &texResource, &mCrateSRV));
 	ReleaseCOM(texResource);
 
-	mWaves.Init(mWavesVertexCountX, mWavesVertexCountZ, 1.0f, 0.03f, 5.0f, 0.3f);
+	mWaves.Init(mWavesVertexCountX, mWavesVertexCountZ, 1.0f, mWavesTimeStep, 5.0f, 0.3f);
 
 	BuildLandGeometryBuffers();
 	BuildWaveGeometryBuffers();
@@ -287,6 +291,7 @@ bool BlurApp::Init()
 	// Create the textures, SRVs, and UAVs
 	ID3D11Texture2D *texture1 = nullptr;
 	ID3D11Texture2D *texture2 = nullptr;
+	ID3D11Texture2D *texture3 = nullptr;
 
 	// Initialize the texture data with all zeros
 	std::vector<float> initialData(mWavesVertexCountX * mWavesVertexCountZ, 0.0f);
@@ -310,9 +315,11 @@ bool BlurApp::Init()
 	// Texture 1
 	HR(md3dDevice->CreateTexture2D(&textureDesc, &initialTextureData, &texture1));
 
-
 	// Texture 2
 	HR(md3dDevice->CreateTexture2D(&textureDesc, &initialTextureData, &texture2));
+
+	// Texture 3
+	HR(md3dDevice->CreateTexture2D(&textureDesc, &initialTextureData, &texture3));
 
 	textureDesc.Usage = D3D11_USAGE_STAGING;
 	textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
@@ -331,6 +338,9 @@ bool BlurApp::Init()
 	// SRV 2
 	HR(md3dDevice->CreateShaderResourceView(texture2, &srvDesc, &mWaveCurSolSRV));
 
+	// SRV 2
+	HR(md3dDevice->CreateShaderResourceView(texture3, &srvDesc, &mWaveNextSolSRV));
+
 	// Create the UAVs
 	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 	uavDesc.Format = DXGI_FORMAT_R32_FLOAT;
@@ -343,10 +353,13 @@ bool BlurApp::Init()
 	// UAV 2
 	HR(md3dDevice->CreateUnorderedAccessView(texture2, &uavDesc, &mWaveCurSolUAV));
 
+	// UAV 2
+	HR(md3dDevice->CreateUnorderedAccessView(texture3, &uavDesc, &mWaveNextSolUAV));
+
 	// Release the texture resources
 	ReleaseCOM(texture1);
 	ReleaseCOM(texture2);
-
+	ReleaseCOM(texture3);
 
 	return true;
 }
@@ -380,70 +393,82 @@ void BlurApp::UpdateScene(float dt)
 	XMMATRIX V = XMMatrixLookAtLH(pos, target, up);
 	XMStoreFloat4x4(&mView, V);
 
-
 	// TODO (the disturb part is not done yet)
 
 	// run the compute shader to update the waves
-	Effects::WaveFX->SetPrevSolInput(mWavePrevSolSRV);
-	Effects::WaveFX->SetCurSolOutput(mWaveCurSolUAV);
 
-	Effects::WaveFX->SetWaveIndexCountX(mWavesVertexCountX);
-	Effects::WaveFX->SetWaveIndexCountZ(mWavesVertexCountZ);
-	Effects::WaveFX->SetDT(dt);
+	static float t = 0;
 
-	Effects::WaveFX->WaveUpdateTech->GetPassByIndex(0)->Apply(0, md3dImmediateContext);
+	// Accumulate time.
+	t += dt;
 
-	md3dImmediateContext->Dispatch((mWavesVertexCountX + 15) / 16, (mWavesVertexCountZ + 15) / 16, 1);
+	static int ticks = 0;
+	int ticks_per_disturb = 4;
 
-	//
-	// Every quarter second, generate a random wave.
-	//
-
-	static float t_base = 0.0f;
-	if ((mTimer.TotalTime() - t_base) >= 0.1f)
+	if (t >= mWavesTimeStep)
 	{
-		t_base += 0.1f;
-
-		DWORD i = 5 + rand() % (mWaves.RowCount() - 10);
-		DWORD j = 5 + rand() % (mWaves.ColumnCount() - 10);
-
-		float r = MathHelper::RandF(0.5f, 1.0f);
+		t = 0.0f; // reset time
 
 		Effects::WaveFX->SetPrevSolInput(mWavePrevSolSRV);
-		Effects::WaveFX->SetCurSolOutput(mWaveCurSolUAV);
+		Effects::WaveFX->SetCurSolInput(mWaveCurSolSRV);
+
+		Effects::WaveFX->SetNextSolOutput(mWaveNextSolUAV);
+
 		Effects::WaveFX->SetWaveIndexCountX(mWavesVertexCountX);
 		Effects::WaveFX->SetWaveIndexCountZ(mWavesVertexCountZ);
 		Effects::WaveFX->SetDT(dt);
 
-		Effects::WaveFX->SetMagnitude(r);
-		Effects::WaveFX->SetDisturbPos(i, j);
-
-		Effects::WaveFX->WaveDisturbTech->GetPassByIndex(0)->Apply(0, md3dImmediateContext);
-
-		log("dispatching disturb");
+		Effects::WaveFX->WaveUpdateTech->GetPassByIndex(0)->Apply(0, md3dImmediateContext);
 
 		md3dImmediateContext->Dispatch((mWavesVertexCountX + 15) / 16, (mWavesVertexCountZ + 15) / 16, 1);
 
-		// mWaves.Disturb(i, j, r);
+		++ticks;
+
+		if (ticks % ticks_per_disturb == 0)
+		{
+			ticks = 0;
+			DWORD i = 5 + rand() % (mWaves.RowCount() - 10);
+			DWORD j = 5 + rand() % (mWaves.ColumnCount() - 10);
+
+			float r = MathHelper::RandF(0.5f, 1.0f);
+
+			Effects::WaveFX->SetPrevSolInput(mWavePrevSolSRV);
+			Effects::WaveFX->SetCurSolInput(mWaveCurSolSRV);
+			Effects::WaveFX->SetNextSolOutput(mWaveNextSolUAV);
+
+			Effects::WaveFX->SetWaveIndexCountX(mWavesVertexCountX);
+			Effects::WaveFX->SetWaveIndexCountZ(mWavesVertexCountZ);
+			Effects::WaveFX->SetDT(dt);
+
+			Effects::WaveFX->SetMagnitude(r);
+			Effects::WaveFX->SetDisturbPos(i, j);
+
+			Effects::WaveFX->WaveDisturbTech->GetPassByIndex(0)->Apply(0, md3dImmediateContext);
+
+			md3dImmediateContext->Dispatch((mWavesVertexCountX + 15) / 16, (mWavesVertexCountZ + 15) / 16, 1);
+		}
+
+		// swap the buffers
+		ID3D11ShaderResourceView *tempSRV = mWavePrevSolSRV;
+		mWavePrevSolSRV = mWaveCurSolSRV;
+		mWaveCurSolSRV = mWaveNextSolSRV;
+		mWaveNextSolSRV = tempSRV;
+
+		// swap the UAVs
+		ID3D11UnorderedAccessView *tempUAV = mWavePrevSolUAV;
+		mWavePrevSolUAV = mWaveCurSolUAV;
+		mWaveCurSolUAV = mWaveNextSolUAV;
+		mWaveNextSolUAV = tempUAV;
 	}
 
 	// Unbind everything from cs
-	ID3D11ShaderResourceView *nullSRV[1] = {0};
-	md3dImmediateContext->CSSetShaderResources(0, 1, nullSRV);
+	ID3D11ShaderResourceView *nullSRV[2] = {0, 0};
+	md3dImmediateContext->CSSetShaderResources(0, 2, nullSRV);
 
 	ID3D11UnorderedAccessView *nullUAV[1] = {0};
 	md3dImmediateContext->CSSetUnorderedAccessViews(0, 1, nullUAV, 0);
 
 	md3dImmediateContext->CSSetShader(0, 0, 0);
-
-	// swap the buffers
-	ID3D11ShaderResourceView *tempSRV = mWavePrevSolSRV;
-	mWavePrevSolSRV = mWaveCurSolSRV;
-	mWaveCurSolSRV = tempSRV;
-	// swap the UAVs
-	ID3D11UnorderedAccessView *tempUAV = mWavePrevSolUAV;
-	mWavePrevSolUAV = mWaveCurSolUAV;
-	mWaveCurSolUAV = tempUAV;
 
 	// the following is all commented bc the compute shader will do all this
 
@@ -739,8 +764,8 @@ void BlurApp::DrawWrapper()
 	md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
 
 	// unbind the displacement map
-	ID3D11ShaderResourceView *nullSRV[1] = {0};
-	md3dImmediateContext->VSSetShaderResources(0, 1, nullSRV);
+	ID3D11ShaderResourceView *nullSRV[] = {0, 0};
+	md3dImmediateContext->VSSetShaderResources(0, 2, nullSRV);
 }
 
 void BlurApp::DrawScreenQuad()

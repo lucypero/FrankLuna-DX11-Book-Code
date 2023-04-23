@@ -112,7 +112,6 @@ WaveEffect::WaveEffect(ID3D11Device* device, const std::wstring& filename)
 	PrevSolInput    = mFX->GetVariableByName("gPrevSolInput")->AsShaderResource();
 	CurSolInput    = mFX->GetVariableByName("gCurrSolInput")->AsShaderResource();
 
-	CurSolOutput   = mFX->GetVariableByName("gCurrSolOutput")->AsUnorderedAccessView();
 	NextSolOutput   = mFX->GetVariableByName("gNextSolOutput")->AsUnorderedAccessView();
 
 	WaveIndexCountX = mFX->GetVariableByName("WavesIndexCountX")->AsScalar();

@@ -132,7 +132,6 @@ public:
 	void SetPrevSolInput(ID3D11ShaderResourceView* tex)   { PrevSolInput->SetResource(tex); }
 	void SetCurSolInput(ID3D11ShaderResourceView* tex)   { CurSolInput->SetResource(tex); }
 
-	void SetCurSolOutput(ID3D11UnorderedAccessView* tex) { CurSolOutput->SetUnorderedAccessView(tex); }
 	void SetNextSolOutput(ID3D11UnorderedAccessView* tex) { NextSolOutput->SetUnorderedAccessView(tex); }
 
 	void SetWaveIndexCountX(int mWavesVertexCountX) { WaveIndexCountX->SetInt(mWavesVertexCountX); }
@@ -157,7 +156,6 @@ public:
 	ID3DX11EffectShaderResourceVariable* PrevSolInput;
 	ID3DX11EffectShaderResourceVariable* CurSolInput;
 
-	ID3DX11EffectUnorderedAccessViewVariable* CurSolOutput;
 	ID3DX11EffectUnorderedAccessViewVariable* NextSolOutput;
 };
 

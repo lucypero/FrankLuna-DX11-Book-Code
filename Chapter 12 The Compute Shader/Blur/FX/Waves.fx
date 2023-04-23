@@ -18,7 +18,8 @@ cbuffer cbConstants
 }
 
 Texture2D gPrevSolInput;
-RWTexture2D<float> gCurrSolOutput;
+Texture2D gCurrSolInput;
+RWTexture2D<float> gNextSolOutput;
 
 [numthreads(N, N, 1)]
 void WaveUpdateCS(int3 groupThreadID : SV_GroupThreadID,
@@ -26,24 +27,18 @@ void WaveUpdateCS(int3 groupThreadID : SV_GroupThreadID,
 {
 
     // NOTE: the original code is indexing the other texture here so we might have a problem.
-    float mk1_value = mK1 * gPrevSolInput[dispatchThreadID.xy];
-    float mk2_value = mK2 * gPrevSolInput[dispatchThreadID.xy];
+    float mk1_value = mK1 * gPrevSolInput[dispatchThreadID.xy].r;
+    float mk2_value = mK2 * gCurrSolInput[dispatchThreadID.xy].r;
 
     float mk3_value_b = 0.0f;
-    mk3_value_b += gPrevSolInput[dispatchThreadID.xy + int2(1, 0)];
-    mk3_value_b += gPrevSolInput[dispatchThreadID.xy + int2(-1, 0)];
-    mk3_value_b += gPrevSolInput[dispatchThreadID.xy + int2(0, 1)];
-    mk3_value_b += gPrevSolInput[dispatchThreadID.xy + int2(0, -1)];
+    mk3_value_b += gCurrSolInput[dispatchThreadID.xy + int2(1, 0)].r;
+    mk3_value_b += gCurrSolInput[dispatchThreadID.xy + int2(-1, 0)].r;
+    mk3_value_b += gCurrSolInput[dispatchThreadID.xy + int2(0, 1)].r;
+    mk3_value_b += gCurrSolInput[dispatchThreadID.xy + int2(0, -1)].r;
     float mk3_value = mK3 * mk3_value_b;
 
-    gCurrSolOutput[dispatchThreadID.xy] = mk1_value + mk2_value + mk3_value;
+    gNextSolOutput[dispatchThreadID.xy] = mk1_value + mk2_value + mk3_value;
 }
-
-// needs
-/*
-magnitude
-
-*/
 
 [numthreads(N, N, 1)]
 void WaveDisturbCS(int3 groupThreadID : SV_GroupThreadID,
@@ -61,15 +56,15 @@ void WaveDisturbCS(int3 groupThreadID : SV_GroupThreadID,
     float halfMag = 0.5f*magnitude;
 
     int2 the_texel = dispatchThreadID.xy;
-    gCurrSolOutput[the_texel] = gPrevSolInput[the_texel] + magnitude;
+    gNextSolOutput[the_texel] = gCurrSolInput[the_texel].r + magnitude;
     the_texel = dispatchThreadID.xy + int2(1, 0);
-    gCurrSolOutput[the_texel] = gPrevSolInput[the_texel] + halfMag;
+    gNextSolOutput[the_texel] = gCurrSolInput[the_texel].r + halfMag;
     the_texel = dispatchThreadID.xy + int2(-1, 0);
-    gCurrSolOutput[the_texel] = gPrevSolInput[the_texel] + halfMag;
+    gNextSolOutput[the_texel] = gCurrSolInput[the_texel].r + halfMag;
     the_texel = dispatchThreadID.xy + int2(0, 1);
-    gCurrSolOutput[the_texel] = gPrevSolInput[the_texel] + halfMag;
+    gNextSolOutput[the_texel] = gCurrSolInput[the_texel].r + halfMag;
     the_texel = dispatchThreadID.xy + int2(0, -1);
-    gCurrSolOutput[the_texel] = gPrevSolInput[the_texel] + halfMag;
+    gNextSolOutput[the_texel] = gCurrSolInput[the_texel].r + halfMag;
 }
 
 technique11 WaveUpdate
