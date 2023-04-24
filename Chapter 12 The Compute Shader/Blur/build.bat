@@ -1,3 +1,3 @@
 
-msbuild .\Blur.sln || exit /b
-start .\Debug\Blur.exe
+msbuild .\Blur.sln /p:Configuration=Debug /p:Platform=x64 || exit /b
+start .\x64\Debug\Blur.exe
