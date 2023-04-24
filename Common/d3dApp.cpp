@@ -5,6 +5,11 @@
 #include "d3dApp.h"
 #include <WindowsX.h>
 #include <sstream>
+#ifdef _DEBUG
+#include "renderdoc_app.h"
+#endif
+
+RENDERDOC_API_1_1_2 *rdoc_api = NULL;
 
 namespace
 {
@@ -102,9 +107,11 @@ int D3DApp::Run()
 
 			if( !mAppPaused )
 			{
+				// if(rdoc_api) rdoc_api->StartFrameCapture(NULL, NULL);
 				CalculateFrameStats();
 				UpdateScene(mTimer.DeltaTime());	
 				DrawScene();
+				// if(rdoc_api) rdoc_api->EndFrameCapture(NULL, NULL);
 			}
 			else
 			{
@@ -118,6 +125,19 @@ int D3DApp::Run()
 
 bool D3DApp::Init()
 {
+
+	// At init, on windows
+#ifdef _DEBUG
+	if (HMODULE mod = GetModuleHandleA("renderdoc.dll"))
+	{
+		pRENDERDOC_GetAPI RENDERDOC_GetAPI =
+			(pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
+		int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void **)&rdoc_api);
+		assert(ret == 1);
+	}
+#endif
+
+
 	if(!InitMainWindow())
 		return false;
 
