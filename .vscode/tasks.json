@@ -6,7 +6,10 @@
         {
             "label": "project ms build",
             "type": "shell",
-            "command": "msbuild \"Chapter 12 The Compute Shader\\Blur\\Blur.sln\"",
+            "command": "build.bat",
+            "options": {
+                "cwd": "${workspaceFolder}\\Chapter 12 The Compute Shader\\Blur"
+            },
             "problemMatcher": "$msCompile"
         }
     ]
