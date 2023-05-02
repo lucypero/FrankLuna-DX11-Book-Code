@@ -21,4 +21,5 @@ D3DX11CreateShaderResourceViewFromFile -> DirectX::CreateDDSTextureFromFile
 
   dxerr.cpp/.h
   DDSTextureLoader.cpp/.h
+  utils.cpp/.h
 
