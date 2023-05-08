@@ -152,7 +152,7 @@ void BasicTessellation::DrawScene()
 	XMMATRIX viewProj = view*proj;
 
 	md3dImmediateContext->IASetInputLayout(InputLayouts::Pos);
-    md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
+    md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
  
 	UINT stride = sizeof(Vertex::Pos);
     UINT offset = 0;
@@ -185,7 +185,7 @@ void BasicTessellation::DrawScene()
 		Effects::TessellationFX->TessTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
 
 		md3dImmediateContext->RSSetState(RenderStates::WireframeRS);
-		md3dImmediateContext->Draw(4, 0);
+		md3dImmediateContext->Draw(3, 0);
 	 }
 
 	HR(mSwapChain->Present(0, 0));
@@ -239,7 +239,7 @@ void BasicTessellation::BuildQuadPatchBuffer()
 {
 	D3D11_BUFFER_DESC vbd;
     vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.ByteWidth = sizeof(XMFLOAT3) * 4;
+	vbd.ByteWidth = sizeof(XMFLOAT3) * 3;
     vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vbd.CPUAccessFlags = 0;
     vbd.MiscFlags = 0;
@@ -249,7 +249,6 @@ void BasicTessellation::BuildQuadPatchBuffer()
 		XMFLOAT3(-10.0f, 0.0f, +10.0f),
 		XMFLOAT3(+10.0f, 0.0f, +10.0f),
 		XMFLOAT3(-10.0f, 0.0f, -10.0f),
-		XMFLOAT3(+10.0f, 0.0f, -10.0f)
 	};
 
     D3D11_SUBRESOURCE_DATA vinitData;
