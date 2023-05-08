@@ -4,11 +4,29 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "project ms build",
+            "label": "project ms build - blur",
             "type": "shell",
             "command": "build.bat",
             "options": {
                 "cwd": "${workspaceFolder}\\Chapter 12 The Compute Shader\\Blur"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "project ms build - basic tesselation",
+            "type": "shell",
+            "command": "build.bat",
+            "options": {
+                "cwd": "${workspaceFolder}\\Chapter 13 The Tessellation Stages\\BasicTessellation"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "project ms build - bezier patch",
+            "type": "shell",
+            "command": "build.bat",
+            "options": {
+                "cwd": "${workspaceFolder}\\Chapter 13 The Tessellation Stages\\BezierPatch"
             },
             "problemMatcher": "$msCompile"
         }
