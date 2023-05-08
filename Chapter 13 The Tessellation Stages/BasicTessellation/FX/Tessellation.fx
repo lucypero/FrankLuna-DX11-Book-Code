@@ -76,13 +76,43 @@ PatchTess ConstantHS(InputPatch<VertexOut, 4> patch, uint patchID : SV_Primitive
 
 	// Uniformly tessellate the patch.
 
-	pt.EdgeTess[0] = tess;
-	pt.EdgeTess[1] = tess;
-	pt.EdgeTess[2] = tess;
-	pt.EdgeTess[3] = tess;
+	// uncomment the one u want to see.
+
+	// Square Pizza
+	// pt.EdgeTess[0] = 4.0;
+	// pt.EdgeTess[1] = 4.0;
+	// pt.EdgeTess[2] = 4.0;
+	// pt.EdgeTess[3] = 4.0;
 	
-	pt.InsideTess[0] = tess;
-	pt.InsideTess[1] = tess;
+	// pt.InsideTess[0] = 1.0;
+	// pt.InsideTess[1] = 1.0;
+
+	// shuriken
+	// pt.EdgeTess[0] = 4.0;
+	// pt.EdgeTess[1] = 4.0;
+	// pt.EdgeTess[2] = 4.0;
+	// pt.EdgeTess[3] = 4.0;
+	
+	// pt.InsideTess[0] = 3.0;
+	// pt.InsideTess[1] = 3.0;
+
+	// chaos
+	// pt.EdgeTess[0] = 1.0;
+	// pt.EdgeTess[1] = 2.0;
+	// pt.EdgeTess[2] = 3.0;
+	// pt.EdgeTess[3] = 4.0;
+	
+	// pt.InsideTess[0] = 4.0;
+	// pt.InsideTess[1] = 4.0;
+
+	// i don't even know. understanding inside tesselation factors is impossible.
+	pt.EdgeTess[0] = 2.0;
+	pt.EdgeTess[1] = 2.0;
+	pt.EdgeTess[2] = 4.0;
+	pt.EdgeTess[3] = 4.0;
+	
+	pt.InsideTess[0] = 2.0;
+	pt.InsideTess[1] = 4.0;
 	
 	return pt;
 }
@@ -129,7 +159,7 @@ DomainOut DS(PatchTess patchTess,
 	float3 p  = lerp(v1, v2, uv.y); 
 	
 	// Displacement mapping
-	p.y = 0.3f*( p.z*sin(p.x) + p.x*cos(p.z) );
+	//p.y = 0.3f*( p.z*sin(p.x) + p.x*cos(p.z) );
 	
 	dout.PosH = mul(float4(p, 1.0f), gWorldViewProj);
 	
