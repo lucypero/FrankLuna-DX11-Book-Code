@@ -11,7 +11,7 @@ using namespace DirectX;
 
 D3DX11CreateShaderResourceViewFromFile -> DirectX::CreateDDSTextureFromFile
 
-- Add the missing cpp files in the Common folder to the solution. (dxerr.cpp, DDSTextureLoader.cpp)
+- Add the missing cpp files in the Common folder to the solution. .h and .cpp (dxerr.cpp, DDSTextureLoader.cpp, utils.cpp)
 
 - in VS, add ..\..\Common as include folder and library folder.
 
@@ -23,3 +23,9 @@ D3DX11CreateShaderResourceViewFromFile -> DirectX::CreateDDSTextureFromFile
   DDSTextureLoader.cpp/.h
   utils.cpp/.h
 
+
+- library names:
+
+debug 32 bit:
+
+d3d11.lib;D3DCompiler.lib;Effects11d.lib;dxgi.lib;dxguid.lib;%(AdditionalDependencies)

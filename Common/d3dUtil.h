@@ -9,7 +9,7 @@
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #endif
- 
+
 #include "d3dx11Effect.h"
 #include "DDSTextureLoader.h"
 #include "WICTextureLoader.h"
@@ -25,6 +25,8 @@
 #include <vector>
 #include "MathHelper.h"
 #include "LightHelper.h"
+
+using namespace DirectX;
 
 //---------------------------------------------------------------------------------------
 // Simple d3d error checker for book demos.
