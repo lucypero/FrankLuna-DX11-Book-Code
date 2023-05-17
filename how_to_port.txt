@@ -29,3 +29,7 @@ D3DX11CreateShaderResourceViewFromFile -> DirectX::CreateDDSTextureFromFile
 debug 32 bit:
 
 d3d11.lib;D3DCompiler.lib;Effects11d.lib;dxgi.lib;dxguid.lib;%(AdditionalDependencies)
+
+debug 64 bit:
+
+d3d11.lib;D3DCompiler.lib;Effects11d-64.lib;dxgi.lib;dxguid.lib;%(AdditionalDependencies)
