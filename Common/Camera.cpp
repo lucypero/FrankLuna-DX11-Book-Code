@@ -173,6 +173,15 @@ void Camera::Strafe(float d)
 	XMStoreFloat3(&mPosition, XMVectorMultiplyAdd(s, r, p));
 }
 
+void Camera::StrafeY(float d)
+{
+	// mPosition += d*mRight
+	XMVECTOR s = XMVectorReplicate(d);
+	XMVECTOR r = XMLoadFloat3(&mUp);
+	XMVECTOR p = XMLoadFloat3(&mPosition);
+	XMStoreFloat3(&mPosition, XMVectorMultiplyAdd(s, r, p));
+}
+
 void Camera::Walk(float d)
 {
 	// mPosition += d*mLook

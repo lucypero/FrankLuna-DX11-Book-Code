@@ -60,6 +60,7 @@ public:
 
 	// Strafe/Walk the camera a distance d.
 	void Strafe(float d);
+	void StrafeY(float d);
 	void Walk(float d);
 
 	// Rotate the camera.
