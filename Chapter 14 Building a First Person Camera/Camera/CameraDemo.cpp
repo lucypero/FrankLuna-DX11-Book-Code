@@ -238,6 +238,12 @@ void CameraApp::UpdateScene(float dt)
 	if( GetAsyncKeyState('D') & 0x8000 )
 		mCam.Strafe(10.0f*dt);
 
+	if( GetAsyncKeyState('H') & 0x8000 )
+		mCam.Roll(10.0f*dt);
+
+	if( GetAsyncKeyState('J') & 0x8000 )
+		mCam.Roll(-10.0f*dt);
+
 	//
 	// Switch the number of lights based on key presses.
 	//
