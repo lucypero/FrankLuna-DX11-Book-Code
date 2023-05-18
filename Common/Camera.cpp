@@ -194,9 +194,9 @@ void Camera::Pitch(float angle)
 
 void Camera::RotateY(float angle)
 {
-	// Rotate the basis vectors about the world y-axis.
+	// Rotate the basis vectors about the up vector
 
-	XMMATRIX R = XMMatrixRotationY(angle);
+	XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&mUp), angle);
 
 	XMStoreFloat3(&mRight,   XMVector3TransformNormal(XMLoadFloat3(&mRight), R));
 	XMStoreFloat3(&mUp, XMVector3TransformNormal(XMLoadFloat3(&mUp), R));
@@ -205,9 +205,9 @@ void Camera::RotateY(float angle)
 
 void Camera::Roll(float angle)
 {
-	// Rotate the basis vectors about the world z-axis.
+	// Rotate the basis vectors about the forward vector
 
-	XMMATRIX R = XMMatrixRotationZ(angle);
+	XMMATRIX R = XMMatrixRotationAxis(XMLoadFloat3(&mLook), angle);
 
 	XMStoreFloat3(&mRight,   XMVector3TransformNormal(XMLoadFloat3(&mRight), R));
 	XMStoreFloat3(&mUp, XMVector3TransformNormal(XMLoadFloat3(&mUp), R));
