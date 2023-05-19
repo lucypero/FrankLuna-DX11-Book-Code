@@ -229,17 +229,22 @@ bool NormalDisplacementMapApp::Init()
 
 	mSky = new Sky(md3dDevice, L"Textures/snowcube1024.dds", 5000.0f);
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/floor.dds", 0, 0, &mStoneTexSRV, 0 ));
+	ID3D11Resource* texResource = nullptr;
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, 
+		L"Textures/floor.dds", &texResource, &mStoneTexSRV));
+	ReleaseCOM(texResource);
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/bricks.dds", 0, 0, &mBrickTexSRV, 0 ));
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, 
+		L"Textures/bricks.dds", &texResource, &mBrickTexSRV));
+	ReleaseCOM(texResource);
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/floor_nmap.dds", 0, 0, &mStoneNormalTexSRV, 0 ));
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, 
+		L"Textures/floor_nmap.dds", &texResource, &mStoneNormalTexSRV));
+	ReleaseCOM(texResource);
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/bricks_nmap.dds", 0, 0, &mBrickNormalTexSRV, 0 ));
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, 
+		L"Textures/bricks_nmap.dds", &texResource, &mBrickNormalTexSRV));
+	ReleaseCOM(texResource);
 
 	BuildShapeGeometryBuffers();
 	BuildSkullGeometryBuffers();
