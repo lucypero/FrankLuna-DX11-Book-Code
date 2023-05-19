@@ -7,9 +7,9 @@
 #include <sstream>
 #ifdef _DEBUG
 #include "renderdoc_app.h"
+RENDERDOC_API_1_1_2 *rdoc_api = NULL;
 #endif
 
-RENDERDOC_API_1_1_2 *rdoc_api = NULL;
 
 namespace
 {
