@@ -9,6 +9,7 @@
 #include "Vertex.h"
 #include <fstream>
 #include <sstream>
+#include <DirectXMath.h>
 
 Terrain::Terrain() : 
 	mQuadPatchVB(0), 
@@ -126,8 +127,10 @@ void Terrain::Init(ID3D11Device* device, ID3D11DeviceContext* dc, const InitInfo
 	layerFilenames.push_back(mInfo.LayerMapFilename4);
 	mLayerMapArraySRV = d3dHelper::CreateTexture2DArraySRV(device, dc, layerFilenames);
 
-	HR(D3DX11CreateShaderResourceViewFromFile(device, 
-		mInfo.BlendMapFilename.c_str(), 0, 0, &mBlendMapSRV, 0));
+	ID3D11Resource* texResource = nullptr;
+	HR(DirectX::CreateDDSTextureFromFile(device, 
+		mInfo.BlendMapFilename.c_str(), &texResource, &mBlendMapSRV));
+	ReleaseCOM(texResource);
 }
 
 void Terrain::Draw(ID3D11DeviceContext* dc, const Camera& cam, DirectionalLight lights[3])
@@ -414,12 +417,12 @@ void Terrain::BuildHeightmapSRV(ID3D11Device* device)
 	texDesc.MiscFlags = 0;
 
 	// HALF is defined in xnamath.h, for storing 16-bit float.
-	std::vector<HALF> hmap(mHeightmap.size());
-	std::transform(mHeightmap.begin(), mHeightmap.end(), hmap.begin(), XMConvertFloatToHalf);
+	std::vector<PackedVector::HALF> hmap(mHeightmap.size());
+	std::transform(mHeightmap.begin(), mHeightmap.end(), hmap.begin(), DirectX::PackedVector::XMConvertFloatToHalf);
 	
 	D3D11_SUBRESOURCE_DATA data;
 	data.pSysMem = &hmap[0];
-    data.SysMemPitch = mInfo.HeightmapWidth*sizeof(HALF);
+    data.SysMemPitch = mInfo.HeightmapWidth*sizeof(PackedVector::HALF);
     data.SysMemSlicePitch = 0;
 
 	ID3D11Texture2D* hmapTex = 0;
