@@ -10,7 +10,10 @@
 
 Sky::Sky(ID3D11Device* device, const std::wstring& cubemapFilename, float skySphereRadius)
 {
-	HR(D3DX11CreateShaderResourceViewFromFile(device, cubemapFilename.c_str(), 0, 0, &mCubeMapSRV, 0));
+
+	ID3D11Resource* texResource = nullptr;
+	HR(DirectX::CreateDDSTextureFromFile(device, cubemapFilename.c_str(), &texResource, &mCubeMapSRV));
+	ReleaseCOM(texResource);
 
 	GeometryGenerator::MeshData sphere;
 	GeometryGenerator geoGen;
