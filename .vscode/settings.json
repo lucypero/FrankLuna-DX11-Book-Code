@@ -3,7 +3,8 @@
         "vector": "cpp",
         "tuple": "cpp",
         "cmath": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "xiosbase": "cpp"
     }
 
 }

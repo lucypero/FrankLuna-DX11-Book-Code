@@ -58,7 +58,7 @@ private:
 	ID3D11Buffer* mInstancedBuffer;
 
 	// Bounding box of the skull.
-	BoundingBox mSkullBox;
+	BoundingSphere mSkullBox;
 	BoundingFrustum mCamFrustum;
 	
 	UINT mVisibleObjectCount;
@@ -363,6 +363,7 @@ void InstancingAndCullingApp::BuildSkullGeometryBuffers()
 	
 	XMVECTOR vMin = XMLoadFloat3(&vMinf3);
 	XMVECTOR vMax = XMLoadFloat3(&vMaxf3);
+
 	std::vector<Vertex::Basic32> vertices(vcount);
 	for(UINT i = 0; i < vcount; ++i)
 	{
@@ -374,13 +375,30 @@ void InstancingAndCullingApp::BuildSkullGeometryBuffers()
 		vMin = XMVectorMin(vMin, P);
 		vMax = XMVectorMax(vMax, P);
 	}
-	
-	XMStoreFloat3(&mSkullBox.Center, 0.5f*(vMin+vMax));
-	XMStoreFloat3(&mSkullBox.Extents, 0.5f*(vMax-vMin));
 
 	fin >> ignore;
 	fin >> ignore;
 	fin >> ignore;
+	
+	XMStoreFloat3(&mSkullBox.Center, 0.5f*(vMin+vMax));
+
+	XMVECTOR vFurther = XMLoadFloat3(&mSkullBox.Center);
+	float vFurtherMagnitude = 0;
+
+	for(UINT i = 0; i < vcount; ++i)
+	{
+		XMVECTOR P = XMLoadFloat3(&vertices[i].Pos);
+
+		// calc distance from center
+		float magnitude = XMVectorGetX(XMVector3Length(P));
+
+		if (magnitude > vFurtherMagnitude) {
+			vFurther = P;
+			vFurtherMagnitude = magnitude;
+		}
+	}
+
+	mSkullBox.Radius = vFurtherMagnitude;
 
 	mSkullIndexCount = 3*tcount;
 	std::vector<UINT> indices(mSkullIndexCount);
