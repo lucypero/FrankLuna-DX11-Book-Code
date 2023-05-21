@@ -20,6 +20,7 @@
 #include "Effects.h"
 #include "Vertex.h"
 #include "Camera.h"
+#include "utils.h"
 
 #include "DirectXCollision.h"
 
@@ -228,7 +229,7 @@ void InstancingAndCullingApp::UpdateScene(float dt)
 
 			// Transform the camera frustum from view space to the object's local space.
 			BoundingFrustum localspaceFrustum;
-			localspaceFrustum.Transform(mCamFrustum, XMVectorGetX(scale), rotQuat, translation);
+			mCamFrustum.Transform(localspaceFrustum, XMVectorGetX(scale), rotQuat, translation);
 
 			// Perform the box/frustum intersection test in local space.
 			if(localspaceFrustum.Intersects(mSkullBox))
