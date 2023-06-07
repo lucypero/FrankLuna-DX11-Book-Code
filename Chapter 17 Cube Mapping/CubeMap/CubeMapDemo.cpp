@@ -210,7 +210,7 @@ bool CubeMapApp::Init()
 	Effects::InitAll(md3dDevice);
 	InputLayouts::InitAll(md3dDevice);
 
-	mSky = new Sky(md3dDevice, L"Textures/grasscube1024.dds", 5000.0f);
+	mSky = new Sky(md3dDevice, L"Textures/customcube.dds", 5000.0f);
 
 
 	ID3D11Resource* texResource = nullptr;
