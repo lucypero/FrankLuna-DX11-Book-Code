@@ -135,7 +135,7 @@ float4 PS(VertexOut pin,
 		if( gReflectionEnabled )
 		{
 			float3 incident = -toEye;
-			float3 reflectionVector = reflect(incident, pin.NormalW);
+			float3 reflectionVector = refract(incident, pin.NormalW, 0.95);
 			float4 reflectionColor  = gCubeMap.Sample(samAnisotropic, reflectionVector);
 
 			litColor += gMaterial.Reflect*reflectionColor;

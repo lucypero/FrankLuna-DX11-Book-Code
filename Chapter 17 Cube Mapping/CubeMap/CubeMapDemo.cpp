@@ -172,7 +172,7 @@ CubeMapApp::CubeMapApp(HINSTANCE hInstance)
 	mSphereMat.Ambient  = XMFLOAT4(0.2f, 0.3f, 0.4f, 1.0f);
 	mSphereMat.Diffuse  = XMFLOAT4(0.2f, 0.3f, 0.4f, 1.0f);
 	mSphereMat.Specular = XMFLOAT4(0.9f, 0.9f, 0.9f, 16.0f);
-	mSphereMat.Reflect  = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
+	mSphereMat.Reflect  = XMFLOAT4(0.9f, 0.9f, 0.9f, 1.0f);
 
 	mBoxMat.Ambient  = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	mBoxMat.Diffuse  = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -182,7 +182,7 @@ CubeMapApp::CubeMapApp(HINSTANCE hInstance)
 	mSkullMat.Ambient  = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
 	mSkullMat.Diffuse  = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
 	mSkullMat.Specular = XMFLOAT4(0.8f, 0.8f, 0.8f, 16.0f);
-	mSkullMat.Reflect  = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+	mSkullMat.Reflect  = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
 }
 
 CubeMapApp::~CubeMapApp()
