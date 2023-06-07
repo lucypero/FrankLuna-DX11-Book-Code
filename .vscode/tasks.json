@@ -29,6 +29,15 @@
                 "cwd": "${workspaceFolder}\\Chapter 13 The Tessellation Stages\\BezierPatch"
             },
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "project ms build - cubemap",
+            "type": "shell",
+            "command": "build.bat",
+            "options": {
+                "cwd": "${workspaceFolder}\\Chapter 17 Cube Mapping\\CubeMap"
+            },
+            "problemMatcher": "$msCompile"
         }
     ]
 }
