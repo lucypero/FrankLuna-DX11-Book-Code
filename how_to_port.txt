@@ -68,3 +68,9 @@ parent->Children[i]->Bounds.Intersects(rayPos, rayDir, t)
 XNA::IntersectRayTriangle(rayPos, rayDir, v0, v1, v2, &t)
 // to...
 TriangleTests::Intersects(rayPos, rayDir, v0, v1, v2, t)
+
+
+
+notes:
+
+i checked for all targets/platforms to work from chapter 18 up
