@@ -7,6 +7,8 @@
 #include "Effects.h"
 #include "Vertex.h"
 
+using namespace DirectX::PackedVector;
+
 Ssao::Ssao(ID3D11Device* device, ID3D11DeviceContext* dc, int width, int height, float fovy, float farZ)
 	: md3dDevice(device), mDC(dc), mScreenQuadVB(0), mScreenQuadIB(0), mRandomVectorSRV(0),
 	  mNormalDepthRTV(0), mNormalDepthSRV(0), mAmbientRTV0(0), mAmbientSRV0(0), mAmbientRTV1(0), mAmbientSRV1(0)
