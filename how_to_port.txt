@@ -33,3 +33,10 @@ d3d11.lib;D3DCompiler.lib;Effects11d.lib;dxgi.lib;dxguid.lib;%(AdditionalDepende
 debug 64 bit:
 
 d3d11.lib;D3DCompiler.lib;Effects11d-64.lib;dxgi.lib;dxguid.lib;%(AdditionalDependencies)
+
+
+- XNA math.. what to do:
+
+use this instead of xnacollision.h:
+
+#include "DirectXCollision.h"
