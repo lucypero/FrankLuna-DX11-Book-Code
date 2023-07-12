@@ -37,6 +37,28 @@ d3d11.lib;D3DCompiler.lib;Effects11d-64.lib;dxgi.lib;dxguid.lib;%(AdditionalDepe
 
 - XNA math.. what to do:
 
-use this instead of xnacollision.h:
-
+// change...
+#include "XnaCollision.h"
+// to... 
 #include "DirectXCollision.h"
+
+XNA::AxisAlignedBox or frustrum to... :
+
+BoundingBox mSkullBox;
+BoundingFrustum mCamFrustum;
+
+
+// from..
+XNA::IntersectTriangleAxisAlignedBox(v0, v1, v2, &subbox[i])
+// to...
+subbox[i].Intersects(v0, v1, v2)
+
+// from..
+XNA::IntersectRayAxisAlignedBox(rayPos, rayDir, &parent->Children[i]->Bounds, &t)
+// to...
+parent->Children[i]->Bounds.Intersects(rayPos, rayDir, t)
+
+// from..
+XNA::IntersectRayTriangle(rayPos, rayDir, v0, v1, v2, &t)
+// to...
+TriangleTests::Intersects(rayPos, rayDir, v0, v1, v2, t)

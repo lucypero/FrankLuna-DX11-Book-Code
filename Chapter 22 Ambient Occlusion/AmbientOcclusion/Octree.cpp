@@ -4,6 +4,7 @@
 
 #include "Octree.h"
 
+using namespace DirectX;
 
 Octree::Octree()
 	: mRoot(0)
@@ -21,7 +22,7 @@ void Octree::Build(const std::vector<XMFLOAT3>& vertices, const std::vector<UINT
 	mVertices = vertices;
 
 	// Build AABB to contain the scene mesh.
-	XNA::AxisAlignedBox sceneBounds = BuildAABB();
+	BoundingBox sceneBounds = BuildAABB();
 	
 	// Allocate the root node and set its AABB to contain the scene mesh.
 	mRoot = new OctreeNode();
@@ -35,7 +36,7 @@ bool Octree::RayOctreeIntersect(FXMVECTOR rayPos, FXMVECTOR rayDir)
 	return RayOctreeIntersect(mRoot, rayPos, rayDir);
 }
 
-XNA::AxisAlignedBox Octree::BuildAABB()
+BoundingBox Octree::BuildAABB()
 {
 	XMVECTOR vmin = XMVectorReplicate(+MathHelper::Infinity);
 	XMVECTOR vmax = XMVectorReplicate(-MathHelper::Infinity);
@@ -47,7 +48,7 @@ XNA::AxisAlignedBox Octree::BuildAABB()
 		vmax = XMVectorMax(vmax, P);
 	}
 
-	XNA::AxisAlignedBox bounds;
+	BoundingBox bounds;
 	XMVECTOR C = 0.5f*(vmin + vmax);
 	XMVECTOR E = 0.5f*(vmax - vmin); 
 
@@ -70,7 +71,7 @@ void Octree::BuildOctree(OctreeNode* parent, const std::vector<UINT>& indices)
 	{
 		parent->IsLeaf = false;
 
-		XNA::AxisAlignedBox subbox[8];
+		BoundingBox subbox[8];
 		parent->Subdivide(subbox);
 
 		for(int i = 0; i < 8; ++i)
@@ -91,7 +92,7 @@ void Octree::BuildOctree(OctreeNode* parent, const std::vector<UINT>& indices)
 				XMVECTOR v1 = XMLoadFloat3(&mVertices[i1]);
 				XMVECTOR v2 = XMLoadFloat3(&mVertices[i2]);
 
-				if(XNA::IntersectTriangleAxisAlignedBox(v0, v1, v2, &subbox[i]))
+				if(subbox[i].Intersects(v0, v1, v2))
 				{
 					intersectedTriangleIndices.push_back(i0);
 					intersectedTriangleIndices.push_back(i1);
@@ -114,7 +115,8 @@ bool Octree::RayOctreeIntersect(OctreeNode* parent, FXMVECTOR rayPos, FXMVECTOR 
 		{
 			// Recurse down this node if the ray hit the child's box.
 			float t;
-			if( XNA::IntersectRayAxisAlignedBox(rayPos, rayDir, &parent->Children[i]->Bounds, &t) )
+
+			if(parent->Children[i]->Bounds.Intersects(rayPos, rayDir, t))
 			{
 				// If we hit a triangle down this branch, we can bail out that we hit a triangle.
 				if( RayOctreeIntersect(parent->Children[i], rayPos, rayDir) )
@@ -140,7 +142,7 @@ bool Octree::RayOctreeIntersect(OctreeNode* parent, FXMVECTOR rayPos, FXMVECTOR 
 			XMVECTOR v2 = XMLoadFloat3(&mVertices[i2]);
 
 			float t;
-			if( XNA::IntersectRayTriangle(rayPos, rayDir, v0, v1, v2, &t) )
+			if(TriangleTests::Intersects(rayPos, rayDir, v0, v1, v2, t))
 				return true;
 		}
 

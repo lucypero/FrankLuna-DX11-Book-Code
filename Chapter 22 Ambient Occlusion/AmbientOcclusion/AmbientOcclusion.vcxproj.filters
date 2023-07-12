@@ -60,9 +60,6 @@
     <ClCompile Include="Octree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Common\xnacollision.cpp">
-      <Filter>Common</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Common\DDSTextureLoader.cpp">
       <Filter>Common</Filter>
     </ClCompile>
@@ -112,9 +109,6 @@
     </ClInclude>
     <ClInclude Include="Octree.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Common\xnacollision.h">
-      <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Common\DDSTextureLoader.h">
       <Filter>Common</Filter>

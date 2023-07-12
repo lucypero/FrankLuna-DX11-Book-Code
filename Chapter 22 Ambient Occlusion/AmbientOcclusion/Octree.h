@@ -8,7 +8,7 @@
 #define OCTREE_H
 
 #include "d3dUtil.h"
-#include "XnaCollision.h"
+#include "DirectXCollision.h"
 
 struct OctreeNode;
 
@@ -22,7 +22,7 @@ public:
 	bool RayOctreeIntersect(FXMVECTOR rayPos, FXMVECTOR rayDir);
 
 private:
-	XNA::AxisAlignedBox BuildAABB();
+	DirectX::BoundingBox BuildAABB();
 	void BuildOctree(OctreeNode* parent, const std::vector<UINT>& indices);
 	bool RayOctreeIntersect(OctreeNode* parent, FXMVECTOR rayPos, FXMVECTOR rayDir);
 private:
@@ -34,7 +34,7 @@ private:
 struct OctreeNode
 {
 	#pragma region Properties
-	XNA::AxisAlignedBox Bounds;
+	DirectX::BoundingBox Bounds;
 
 	// This will be empty except for leaf nodes.
 	std::vector<UINT> Indices;
@@ -64,7 +64,7 @@ struct OctreeNode
 	///<summary>
 	/// Subdivides the bounding box of this node into eight subboxes (vMin[i], vMax[i]) for i = 0:7.
 	///</summary>
-	void Subdivide(XNA::AxisAlignedBox box[8])
+	void Subdivide(DirectX::BoundingBox box[8])
 	{
 		XMFLOAT3 halfExtent(
 			0.5f*Bounds.Extents.x,
