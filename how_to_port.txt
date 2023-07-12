@@ -9,7 +9,13 @@ using namespace DirectX;
 
 - DDS loading functions. just look at how the new ones are. they are a bit different.
 
+
+	ID3D11Resource* texResource = nullptr;
+
 D3DX11CreateShaderResourceViewFromFile -> DirectX::CreateDDSTextureFromFile
+	-> HR(DirectX::CreateDDSTextureFromFile(device, cubemapFilename.c_str(), &texResource, &mCubeMapSRV));
+
+	ReleaseCOM(texResource);
 
 - Add the missing cpp files in the Common folder to the solution. .h and .cpp (dxerr.cpp, DDSTextureLoader.cpp, utils.cpp)
 
