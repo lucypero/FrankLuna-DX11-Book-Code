@@ -285,17 +285,19 @@ bool SsaoApp::Init()
 	mCam.SetLens(0.25f*MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
 	mSsao = new Ssao(md3dDevice, md3dImmediateContext, mClientWidth, mClientHeight, mCam.GetFovY(), mCam.GetFarZ());
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/floor.dds", 0, 0, &mStoneTexSRV, 0 ));
+	ID3D11Resource* texResource = nullptr;
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, 
+		L"Textures/floor.dds", &texResource, &mStoneTexSRV));
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/bricks.dds", 0, 0, &mBrickTexSRV, 0 ));
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, 
+		L"Textures/bricks.dds", &texResource, &mBrickTexSRV));
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/floor_nmap.dds", 0, 0, &mStoneNormalTexSRV, 0 ));
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, 
+		L"Textures/floor_nmap.dds", &texResource, &mStoneNormalTexSRV));
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/bricks_nmap.dds", 0, 0, &mBrickNormalTexSRV, 0 ));
+	HR(DirectX::CreateDDSTextureFromFile(md3dDevice, 
+		L"Textures/bricks_nmap.dds", &texResource, &mBrickNormalTexSRV));
+	ReleaseCOM(texResource);
 
 	BuildShapeGeometryBuffers();
 	BuildSkullGeometryBuffers();
@@ -406,7 +408,7 @@ void SsaoApp::DrawScene()
 	md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Colors::Silver));
 
 	// We already laid down scene depth to the depth buffer in the Normal/Depth map pass,
-	// so we can set the depth comparison test to “EQUALS.”  This prevents any overdraw
+	// so we can set the depth comparison test to ï¿½EQUALS.ï¿½  This prevents any overdraw
 	// in this rendering pass, as only the nearest visible pixels will pass this depth
 	// comparison test.
 	md3dImmediateContext->OMSetDepthStencilState(RenderStates::EqualsDSS, 0);
