@@ -342,7 +342,7 @@ void ShadowsApp::UpdateScene(float dt)
 	//
 
 	mLightRotationAngle += 0.1f*dt;
-
+	/*
 	XMMATRIX R = XMMatrixRotationY(mLightRotationAngle);
 	for(int i = 0; i < 3; ++i)
 	{
@@ -350,6 +350,7 @@ void ShadowsApp::UpdateScene(float dt)
 		lightDir = XMVector3TransformNormal(lightDir, R);
 		XMStoreFloat3(&mDirLights[i].Direction, lightDir);
 	}
+	*/
 	
 	BuildShadowTransform();
 

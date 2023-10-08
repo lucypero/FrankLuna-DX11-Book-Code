@@ -240,7 +240,7 @@ technique11 BuildShadowMapTech
         SetGeometryShader( NULL );
         SetPixelShader( NULL );
 
-		SetRasterizerState(Depth);
+		SetRasterizerState(NULL);
     }
 }
 

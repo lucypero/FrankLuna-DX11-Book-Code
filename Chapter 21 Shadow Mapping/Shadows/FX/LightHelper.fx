@@ -225,7 +225,7 @@ float3 NormalSampleToWorldSpace(float3 normalMapSample, float3 unitNormalW, floa
 static const float SMAP_SIZE = 2048.0f;
 static const float SMAP_DX = 1.0f / SMAP_SIZE;
 
-float CalcShadowFactor(SamplerComparisonState samShadow, 
+float CalcShadowFactor(SamplerState samShadow,
                        Texture2D shadowMap, 
 					   float4 shadowPosH)
 {
@@ -239,19 +239,13 @@ float CalcShadowFactor(SamplerComparisonState samShadow,
 	const float dx = SMAP_DX;
 
 	float percentLit = 0.0f;
-	const float2 offsets[9] = 
-	{
-		float2(-dx,  -dx), float2(0.0f,  -dx), float2(dx,  -dx),
-		float2(-dx, 0.0f), float2(0.0f, 0.0f), float2(dx, 0.0f),
-		float2(-dx,  +dx), float2(0.0f,  +dx), float2(dx,  +dx)
-	};
 
-	[unroll]
-	for(int i = 0; i < 9; ++i)
-	{
-		percentLit += shadowMap.SampleCmpLevelZero(samShadow, 
-			shadowPosH.xy + offsets[i], depth).r;
+	float sp = shadowMap.Sample(samShadow, shadowPosH.xy).r;
+
+	if (depth > sp) {
+		return 0.0f;
 	}
-
-	return percentLit /= 9.0f;
+	else {
+		return 1.0f;
+	}
 }

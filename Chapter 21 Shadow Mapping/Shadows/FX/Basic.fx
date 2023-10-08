@@ -135,7 +135,7 @@ float4 PS(VertexOut pin,
 
 		// Only the first light casts a shadow.
 		float3 shadow = float3(1.0f, 1.0f, 1.0f);
-		shadow[0] = CalcShadowFactor(samShadow, gShadowMap, pin.ShadowPosH);
+		shadow[0] = CalcShadowFactor(samLinear, gShadowMap, pin.ShadowPosH);
 
 		// Sum the light contribution from each light source.  
 		[unroll]
